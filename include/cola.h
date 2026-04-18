@@ -6,8 +6,10 @@
  * @brief Implementación de la Cola.
  *
  * Capa de Estructuras de Datos.
- * Sirve para el manejo de los movimientos pendientes 
+ * Sirve para el manejo de los movimientos pendientes
  * del jugador y de los bandidos.
  */
+
+ //hola
 
 #endif // COLA_H
