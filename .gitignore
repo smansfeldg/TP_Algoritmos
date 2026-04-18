@@ -1,0 +1,6 @@
+# Ignore build artifacts
+/bin
+/obj
+
+# Ignore Code Blocks files
+/TP_Algoritmos.layout
