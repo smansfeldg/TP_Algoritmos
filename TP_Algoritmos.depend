@@ -1,0 +1,21 @@
+# depslib dependency file v1.0
+1776528853 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/main.c
+	<stdio.h>
+	<stdlib.h>
+	"include/entidades.h"
+	"include/archivos.h"
+	"include/juego.h"
+
+1776528853 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/entidades.h
+
+1776528853 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/archivos.h
+
+1776528853 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/juego.h
+
+1776809558 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/abb.c
+	<string.h>
+	<stdlib.h>
+	"../include/abb.h"
+
+1776809596 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/abb.h
+
