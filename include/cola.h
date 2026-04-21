@@ -30,9 +30,9 @@ void CrearCola(tCola*);
 int ColaLlena(const tCola*, unsigned);
 int ColaVacia(const tCola*);
 void VaciarCola(tCola*);
+int VerPrimero(const tCola*, void*, unsigned);
 int PonerEnCola(tCola*, const void*, unsigned);
 int SacarDeCola(tCola*, void*, unsigned);
-int VerPrimero(const tCola*, void*, unsigned);
 
 unsigned Min(unsigned, unsigned);
 

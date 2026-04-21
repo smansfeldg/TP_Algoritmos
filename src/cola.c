@@ -46,3 +46,59 @@ void VaciarCola(tCola *cola)
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////
+int VerPrimero(const tCola *cola, void *dato, unsigned tam)
+{
+    if(cola->primero==NULL)
+        return 0;
+    memcpy(dato,cola->primero->info,Min(tam,cola->primero->tam));
+    return 1;
+}
+//////////////////////////////////////////////////////////////////////////////////////////
+int PonerEnCola(tCola *cola, const void *dato, unsigned tam)
+{
+    tNodo *nuevo;
+
+    nuevo=malloc(sizeof(tNodo));
+    if(nuevo==NULL)
+        return 0;
+
+    nuevo->info=malloc(tam);
+    if(nuevo->info==NULL)
+    {
+        free(nuevo);
+        return 0;
+    }
+    memcpy(nuevo->info,dato,tam);
+    nuevo->tam=tam;
+    nuevo->sig=NULL;
+    if(cola->ultimo!=NULL)
+        cola->ultimo->sig=nuevo;
+    else
+        cola->primero=nuevo;
+    cola->ultimo=nuevo;
+
+    return 1;
+}
+//////////////////////////////////////////////////////////////////////////////////////////
+int SacarDeCola(tCola *cola, void *dato, unsigned tam)
+{
+    tNodo *elim=cola->primero;
+    if(elim==NULL)
+        return 0;
+
+    cola->primero=elim->sig;
+    memcpy(dato,elim->info,Min(tam,elim->tam));
+    free(elim->info);
+    free(elim);
+    if(cola->primero==NULL)
+        cola->ultimo=NULL;
+    return 1;
+}
+//////////////////////////////////////////////////////////////////////////////////////////
+unsigned Min(unsigned a, unsigned b)
+{
+    if(a<=b)
+        return a;
+    else
+        return b;
+}
