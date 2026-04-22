@@ -33,9 +33,9 @@ int listaVacia(const tLista *p);
 int listaLlena(const tLista *p, unsigned cantBytes);
 int insertarAlFinal(tLista *p, const void *d, unsigned cantBytes);
 int insertarAlComienzo(tLista *p, const void *d, unsigned cantBytes);
-void mostrarDeIzqADer(const tLista *p,
+int mostrarDeIzqADer(const tLista *p,
                       void (*mostrar)(const void *));
-void mostrarDeDerAIzq(const tLista *p,
+int mostrarDeDerAIzq(const tLista *p,
                       void (*mostrar)(const void *));
 int insertarEnOrden(tLista *p, const void *d, unsigned cantBytes,
                     int (*comparar)(const void *, const void *),
