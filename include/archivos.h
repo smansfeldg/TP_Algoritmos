@@ -15,7 +15,9 @@
 
 
 int abrirArchivo(FILE ** arch, const char *nombreArchivo, const char *modoApertura, int mostrarError);
-int cerrarArchivo(FILE* arch);
+int cerrarArchivo(FILE ** arch, const char *nombreArchivo, int mostrarError);
+
+
 
 
 
