@@ -17,7 +17,7 @@ int insertarNodoRecArbolBin(ArbolBin *arbol, const void* dato, const size_t tam,
   int res_comp, res_inser;
   NodoRaiz *nuevo_nodo;
 
-  if(arbol){
+  if(*arbol){
     res_comp = cmp((*arbol)->dato,dato);
     if(res_comp>0){
       return (res_inser = insertarNodoRecArbolBin(&(*arbol)->nodoIzq,dato,tam,cmp));
@@ -114,6 +114,44 @@ int cargarElementosOrdenadosArbolBin(ArbolBin *arbol, void *datos, int lim_izq, 
   }
 
   return cargarElementosOrdenadosArbolBin(&((*arbol)->nodoIzq),datos,medio+1,lim_der,params,leer);
+}
+
+void recorrerEnOrdenArbolBin(ArbolBin *arbol, unsigned nivel, void* params, void (*accion)(void* dato, size_t tam, unsigned nivel, void* params)){
+  if(!(*arbol)){
+    return;
+  }
+
+  recorrerEnOrdenArbolBin(&(*arbol)->nodoIzq,nivel+1,params,accion);
+  accion((*arbol)->dato,(*arbol)->tam,nivel,params);
+  recorrerEnOrdenArbolBin(&(*arbol)->nodoDer,nivel+1,params,accion);
+}
+
+int  cargarArbolBinDesdeArchivoIndice(ArbolBin *arbol, FILE *archivo, size_t tam, size_t (*leer)(void **elementos, void *datos, unsigned posicion, void *params)){
+  int cantidad = ftell(archivo)/tam;
+  return cargarElementosOrdenadosArbolBin(arbol, archivo, 0, cantidad, NULL, leer);
+}
+
+int  cargarArchivoIndiceDesdeArbolBin(ArbolBin *arbol, FILE *archivo, void (*escribir)(void* dato, size_t tam, unsigned nivel, void* params)){
+  recorrerEnOrdenArbolBin(arbol,1,archivo,escribir);
+
+  return 1;
+}
+
+int eliminarElementoArbolBin(ArbolBin *arbol, void* elemento, size_t tam, int (*cmp)(const void* a, const void* b)){
+  int res;
+
+  if( !(*arbol) ){
+    return 0;
+  }
+
+  if( !cmp(elemento,(*arbol)->dato) ){
+    return 1;
+  }
+  else{
+    res = eliminarElementoArbolBin(&(*arbol)->nodoIzq,elemento,tam,cmp) || eliminarElementoArbolBin(&(*arbol)->nodoDer,elemento,tam,cmp);
+  }
+
+  return res;
 }
 
 void liberarArbolBin(ArbolBin *arbol){

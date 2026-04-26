@@ -12,10 +12,11 @@
 
 1776528853 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/juego.h
 
-1776809558 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/abb.c
+1777170354 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/abb.c
 	<string.h>
 	<stdlib.h>
 	"../include/abb.h"
 
-1776809596 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/abb.h
+1777166559 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/abb.h
+	<stdio.h>
 
