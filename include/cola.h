@@ -13,17 +13,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct sNodo
+typedef struct sNodoCola
 {
     void *info;
     unsigned tam;
-    struct sNodo *sig;
-} tNodo;
+    struct sNodoCola *sig;
+} tNodoCola;
 
 typedef struct
 {
-    tNodo *primero;
-    tNodo *ultimo;
+    tNodoCola *primero;
+    tNodoCola *ultimo;
 } tCola;
 
 void CrearCola(tCola*);

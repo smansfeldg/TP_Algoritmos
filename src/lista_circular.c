@@ -18,7 +18,7 @@ int vaciarLista(tLista *p)
     if(!*p)
         return 0;
         
-    tNodo *act = *p, *aux;
+    tNodoListaC *act = *p, *aux;
     /* Rompemos el enlace circular para poder iterar como una lista simple */
     (*p)->ant->sig = NULL; 
 
@@ -41,7 +41,7 @@ int listaVacia(const tLista *p)
 
 int listaLlena(const tLista *p, unsigned cantBytes)
 {
-    tNodo *nue = (tNodo *)malloc(sizeof(tNodo));
+    tNodoListaC *nue = (tNodoListaC *)malloc(sizeof(tNodoListaC));
     void *aux = malloc(cantBytes);
 
     free(nue);
@@ -51,7 +51,7 @@ int listaLlena(const tLista *p, unsigned cantBytes)
 
 int insertarAlFinal(tLista *p, const void *d, unsigned cantBytes)
 {
-    tNodo *nue = (tNodo *)malloc(sizeof(tNodo));
+    tNodoListaC *nue = (tNodoListaC *)malloc(sizeof(tNodoListaC));
     if(!nue)
         return SIN_MEM;
         
@@ -73,7 +73,7 @@ int insertarAlFinal(tLista *p, const void *d, unsigned cantBytes)
     }
     else
     {
-        tNodo *ultimo = (*p)->ant;
+        tNodoListaC *ultimo = (*p)->ant;
         nue->sig = *p;
         nue->ant = ultimo;
         (*p)->ant = nue;
@@ -84,7 +84,7 @@ int insertarAlFinal(tLista *p, const void *d, unsigned cantBytes)
 
 int insertarAlComienzo(tLista *p, const void *d, unsigned cantBytes)
 {
-    tNodo *nue = (tNodo *)malloc(sizeof(tNodo));
+    tNodoListaC *nue = (tNodoListaC *)malloc(sizeof(tNodoListaC));
     if(!nue)
         return SIN_MEM;
         
@@ -105,7 +105,7 @@ int insertarAlComienzo(tLista *p, const void *d, unsigned cantBytes)
     }
     else
     {
-        tNodo *ultimo = (*p)->ant;
+        tNodoListaC *ultimo = (*p)->ant;
         nue->sig = *p;
         nue->ant = ultimo;
         (*p)->ant = nue;
@@ -123,7 +123,7 @@ int mostrarDeIzqADer(const tLista *p,
         return 0;
 
     mostrar(NULL);
-    tNodo *act = *p;
+    tNodoListaC *act = *p;
     do
     {
         mostrar(act->info);
@@ -142,7 +142,7 @@ int mostrarDeDerAIzq(const tLista *p,
         return 0;
 
     mostrar(NULL);
-    tNodo *act = (*p)->ant; /* Comenzamos desde el último */
+    tNodoListaC *act = (*p)->ant; /* Comenzamos desde el último */
     do
     {
         mostrar(act->info);
@@ -158,13 +158,13 @@ int insertarEnOrden(tLista *p, const void *d, unsigned cantBytes,
                     int (*acumular)(void **, unsigned *,
                                      const void *, unsigned))
 {
-    tNodo *act = *p;
-    tNodo *nue;
+    tNodoListaC *act = *p;
+    tNodoListaC *nue;
     int cmp;
 
     if(!act)
     {
-        if((nue = (tNodo *)malloc(sizeof(tNodo))) == NULL) return SIN_MEM;
+        if((nue = (tNodoListaC *)malloc(sizeof(tNodoListaC))) == NULL) return SIN_MEM;
         if((nue->info = malloc(cantBytes)) == NULL) { free(nue); return SIN_MEM; }
         memcpy(nue->info, d, cantBytes);
         nue->tamInfo = cantBytes;
@@ -173,7 +173,7 @@ int insertarEnOrden(tLista *p, const void *d, unsigned cantBytes,
         return TODO_BIEN;
     }
 
-    tNodo *primero = *p;
+    tNodoListaC *primero = *p;
     do {
         cmp = comparar(act->info, d);
         if (cmp == 0)
@@ -188,13 +188,13 @@ int insertarEnOrden(tLista *p, const void *d, unsigned cantBytes,
         act = act->sig;
     } while(act != primero);
 
-    if((nue = (tNodo *)malloc(sizeof(tNodo))) == NULL) return SIN_MEM;
+    if((nue = (tNodoListaC *)malloc(sizeof(tNodoListaC))) == NULL) return SIN_MEM;
     if((nue->info = malloc(cantBytes)) == NULL) { free(nue); return SIN_MEM; }
     
     memcpy(nue->info, d, cantBytes);
     nue->tamInfo = cantBytes;
 
-    tNodo *ant = act->ant;
+    tNodoListaC *ant = act->ant;
     nue->sig = act;
     nue->ant = ant;
     ant->sig = nue;
@@ -213,7 +213,7 @@ void ordenarLista(tLista *p, int (*comparar)(const void *, const void *))
         return;
         
     int huboCambio;
-    tNodo *act;
+    tNodoListaC *act;
     do {
         huboCambio = 0;
         act = *p;
@@ -241,7 +241,7 @@ int eliminarPorClave(tLista *p, void *d, unsigned cantBytes,
     if(!*p)
         return 0;
         
-    tNodo *act = *p;
+    tNodoListaC *act = *p;
     do {
         if(comparar(act->info, d) == 0)
         {

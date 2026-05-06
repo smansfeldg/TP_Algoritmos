@@ -17,15 +17,15 @@
 #define TODO_BIEN  1
 #define CLA_DUP    2
 
-typedef struct sNodo
+typedef struct sNodoListaC
 {
     void        *info;
     unsigned    tamInfo;
-    struct sNodo *sig,
+    struct sNodoListaC *sig,
                  *ant;
-} tNodo;
+} tNodoListaC;
 
-typedef tNodo *tLista;
+typedef tNodoListaC *tLista;
 
 void crearLista(tLista *p);
 int vaciarLista(tLista *p);
