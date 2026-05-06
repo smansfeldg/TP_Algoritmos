@@ -176,3 +176,22 @@ int escribirTxt(FILE *arch, void *dato, unsigned tamLinea, accion Accion)
     free(linea);
     return OK;
 }
+
+// Funciones de puntaje
+int guardarPuntaje(const char *nombreArchivo, const void *registro)
+{
+    FILE *arch = fopen(nombreArchivo, "ab");
+    if(!arch) return 0;
+    int r = fwrite(registro, sizeof(tRegistroPuntaje), 1, arch);
+    fclose(arch);
+    return r == 1;
+}
+
+int leerPuntajes(const char *nombreArchivo, void *registros, int maxRegistros)
+{
+    FILE *arch = fopen(nombreArchivo, "rb");
+    if(!arch) return 0;
+    int leidos = fread(registros, sizeof(tRegistroPuntaje), maxRegistros, arch);
+    fclose(arch);
+    return leidos;
+}

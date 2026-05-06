@@ -88,6 +88,13 @@ void jugar()
     printf("\n--- Resumen de Movimientos ---\n");
     mostrarColaMovimientos(&juego.colaMovimientos);
 
+    tRegistroPuntaje reg;
+    strncpy(reg.nombre, juego.jugador.nombre, MAX_NOMBRE - 1);
+    reg.nombre[MAX_NOMBRE - 1] = '\0';
+    reg.puntos = juego.jugador.puntos;
+    reg.victoria = (juego.jugador.vidas > 0);
+    guardarPuntaje("puntajes.dat", &reg);
+
     liberarJuego(&juego);
 
     printf("\nPartida finalizada!\n");

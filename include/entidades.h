@@ -68,6 +68,12 @@ typedef struct {
     int juegoActivo;
 } tJuego;
 
+typedef struct {
+    char nombre[MAX_NOMBRE];
+    int puntos;
+    int victoria;
+} tRegistroPuntaje;
+
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas);
 void crearBandido(tBandido *b, int id, int posicion);
 void inicializarConfiguracion(tConfiguracion *cfg);
