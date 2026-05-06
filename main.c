@@ -63,6 +63,8 @@ void jugar()
 
     inicializarJuego(&juego, &cfg, nombre);
 
+    guardarCaravana("caravana.txt", &juego);
+
     printf("\nTablero generado! Posicion inicial: 0 (Inicio)\n");
     printf("Objetivo: Llegar a la posicion %d (Refugio)\n", cfg.totalCasillas - 1);
     pausar_consola();
@@ -85,8 +87,6 @@ void jugar()
 
     printf("\n--- Resumen de Movimientos ---\n");
     mostrarColaMovimientos(&juego.colaMovimientos);
-
-    guardarCaravana("caravana.txt", &juego);
 
     liberarJuego(&juego);
 
