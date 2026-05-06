@@ -61,8 +61,7 @@ typedef struct {
 typedef struct {
     tLista tablero;
     tJugador jugador;
-    tBandido bandidos[10];
-    int cantidadBandidos;
+    tLista bandidos;
     tCola colaMovimientos;
     tConfiguracion config;
     int turnoActual;
