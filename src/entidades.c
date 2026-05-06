@@ -93,11 +93,6 @@ int verificarColision(const tJugador *j, const tBandido *b)
     return 1; //(j->posicion == b->posicion && b->activo);
 }
 
-void procesarColision(tJuego *juego, int indiceBandido)
-{
-
-}
-
 int verificarVictoria(const tJugador *j, const tLista *tablero)
 {
 

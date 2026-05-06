@@ -87,7 +87,6 @@ int desencolarMovimiento(tCola *cola, tMovimiento *mov);
 void mostrarColaMovimientos(const tCola *cola);
 int moverBandido(tLista *tablero, tBandido *b, const tJugador *j, int totalCasillas);
 int verificarColision(const tJugador *j, const tBandido *b);
-void procesarColision(tJuego *juego, int indiceBandido);
 int verificarVictoria(const tJugador *j, const tLista *tablero);
 int verificarDerrota(const tJugador *j);
 void guardarCaravana(const char *archivo, const tJuego *juego);
