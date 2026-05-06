@@ -37,6 +37,7 @@
 		<Unit filename="include/entidades.h" />
 		<Unit filename="include/juego.h" />
 		<Unit filename="include/lista_circular.h" />
+		<Unit filename="include/menu.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -56,6 +57,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/lista_circular.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/menu.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Extensions>

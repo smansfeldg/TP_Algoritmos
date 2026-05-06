@@ -5,16 +5,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "include/menu.h"
+#include "../include/menu.h"
 
 void mostrar_menu_principal() {
     printf("========================================\n");
     printf("             MENU PRINCIPAL             \n");
     printf("========================================\n");
-    printf("1. Iniciar Juego\n");
-    printf("2. Cargar Partida\n");
-    printf("3. Opciones\n");
-    printf("4. Salir\n");
+    printf("1. Jugar una nueva partida\n");
+    printf("2. Ver el ranking de jugadores\n");
+    printf("3. Salir del juego\n");
     printf("========================================\n");
 }
 
