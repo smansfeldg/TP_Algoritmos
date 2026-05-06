@@ -1,13 +1,20 @@
 #ifndef JUEGO_H
 #define JUEGO_H
 
-/**
- * @file juego.h
- * @brief Lógica central y reglas del juego.
- *
- * Capa de Negocio / Controlador.
- * Manejo de turnos, movimiento del jugador con el dado, y 
- * resolución de efectos (oasis, tormentas, etc.).
- */
+#include "entidades.h"
+#include "cola.h"
 
-#endif // JUEGO_H
+int iniciarPartida(tJuego *juego, const char *nombreJugador);
+int ejecutarTurno(tJuego *juego);
+int procesarMovimientoJugador(tJuego *juego);
+int procesarMovimientosBandidos(tJuego *juego);
+int resolverColisiones(tJuego *juego);
+void mostrarTableroConPosiciones(const tJuego *juego);
+int lanzarDado();
+char obtenerDireccionMovimiento();
+int obtenerPasosMovimiento();
+void mostrarBienvenida();
+void mostrarFinJuego(int victoria, const tJugador *j);
+void jugarTurnoComputadora(tJuego *juego);
+
+#endif
