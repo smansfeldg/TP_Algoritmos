@@ -86,45 +86,7 @@ void test_verificar_colision_negativa() {
     printf("[OK] test_verificar_colision_negativa\n");
 }
 
-void test_procesar_colision_normal() {
-    tJuego juego;
-    // Configurar estado mínimo necesario
-    crearJugador(&juego.jugador, "TestUser", 5, 3);
-    juego.jugador.protegidoOasis = 0;
-    crearBandido(&juego.bandidos[0], 1, 5);
-    juego.cantidadBandidos = 1;
-    
-    procesarColision(&juego, 0); 
-    
-    // Pierde 1 vida
-    assert(juego.jugador.vidas == 2);
-    // Vuelve a inicio
-    assert(juego.jugador.posicion == 0);
-    // Y el bandido vuelve a inactivo o su config lo requiera
-    assert(juego.bandidos[0].activo == 0);
-    printf("[OK] test_procesar_colision_normal\n");
-}
-
-void test_procesar_colision_con_oasis() {
-    tJuego juego;
-    // La protección del oasis sólo evita perder turno por tormentas, no colisiones con bandidos.
-    // Por lo tanto, el comportamiento esperado es que pierda la vida y vuelva al inicio.
-    crearJugador(&juego.jugador, "TestUser", 5, 3);
-    juego.jugador.protegidoOasis = 1; // Jugador protegido, pero la colisión del bandido lo afecta igual
-    crearBandido(&juego.bandidos[0], 1, 5);
-    juego.bandidos[0].activo = 1;
-    juego.cantidadBandidos = 1;
-    
-    procesarColision(&juego, 0); 
-    
-    // Pierde vida
-    assert(juego.jugador.vidas == 2);
-    // Vuelve atrás
-    assert(juego.jugador.posicion == 0);
-    // Bandido se desactiva
-    assert(juego.bandidos[0].activo == 0);
-    printf("[OK] test_procesar_colision_con_oasis\n");
-}
+// Se eliminaron tests de procesarColision porque la API fue delegada a otras capas.
 
 // ==========================================
 // Tests Lógica de Fin de Partida
@@ -149,8 +111,6 @@ int main() {
     
     test_verificar_colision_positiva();
     test_verificar_colision_negativa();
-    test_procesar_colision_normal();
-    test_procesar_colision_con_oasis();
     
     test_verificar_derrota();
     
