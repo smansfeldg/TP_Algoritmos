@@ -4,12 +4,20 @@
 
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas)
 {
-
+    strncpy(j->nombre, nombre, MAX_NOMBRE - 1);
+    j->nombre[MAX_NOMBRE - 1] = '\0';
+    j->posicion = posicionInicial;
+    j->vidas = vidas;
+    j->puntos = 0;
+    j->protegidoOasis = 0;
+    j->perdidoTurno = 0;
 }
 
 void crearBandido(tBandido *b, int id, int posicion)
 {
-
+    b->id = id;
+    b->posicion = posicion;
+    b->activo = 1;
 }
 
 void inicializarConfiguracion(tConfiguracion *cfg)
@@ -50,7 +58,25 @@ int moverJugador(tLista *tablero, tJugador *j, int pasos, char direccion, int to
 
 void aplicarEfectoCasilla(tJugador *j, char tipoCasilla)
 {
-
+    switch (tipoCasilla)
+    {
+    case TIPO_PREMIO:
+        j->puntos += 10;
+        break;
+    case TIPO_VIDA:
+        j->vidas += 1;
+        break;
+    case TIPO_OASIS:
+        j->protegidoOasis = 1;
+        break;
+    case TIPO_TORMENTA:
+        if (j->protegidoOasis) {
+            j->protegidoOasis = 0;
+        } else {
+            j->perdidoTurno = 1;
+        }
+        break;
+    }
 }
 
 void mostrarEstadoJugador(const tJugador *j)
@@ -90,12 +116,7 @@ int moverBandido(tLista *tablero, tBandido *b, const tJugador *j, int totalCasil
 
 int verificarColision(const tJugador *j, const tBandido *b)
 {
-    return 1; //(j->posicion == b->posicion && b->activo);
-}
-
-void procesarColision(tJuego *juego, int indiceBandido)
-{
-
+    return (j->posicion == b->posicion && b->activo);
 }
 
 int verificarVictoria(const tJugador *j, const tLista *tablero)
@@ -106,7 +127,7 @@ int verificarVictoria(const tJugador *j, const tLista *tablero)
 
 int verificarDerrota(const tJugador *j)
 {
-    return 1; //(j->vidas <= 0);
+    return (j->vidas <= 0);
 }
 
 void guardarCaravana(const char *archivo, const tJuego *juego)

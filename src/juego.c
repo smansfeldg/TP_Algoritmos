@@ -44,12 +44,6 @@ void jugarTurnoComputadora(tJuego *juego)
 
 }
 
-int resolverColisiones(tJuego *juego)
-{
-    int colisiones = 0;
-    return colisiones;
-}
-
 int ejecutarTurno(tJuego *juego)
 {
     return 1;

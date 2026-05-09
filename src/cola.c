@@ -16,10 +16,10 @@ void CrearCola(tCola *cola)
 //////////////////////////////////////////////////////////////////////////////////////////
 int ColaLlena(const tCola *cola, unsigned tam)
 {
-    tNodo *nuevo;
+    tNodoCola *nuevo;
     void *dato;
 
-    nuevo=malloc(sizeof(tNodo));
+    nuevo=malloc(sizeof(tNodoCola));
     dato=malloc(tam);
 
     free(nuevo);
@@ -35,7 +35,7 @@ int ColaVacia(const tCola *cola)
 //////////////////////////////////////////////////////////////////////////////////////////
 void VaciarCola(tCola *cola)
 {
-    tNodo *elim;
+    tNodoCola *elim;
 
     while(cola->primero!=NULL)
     {
@@ -56,9 +56,9 @@ int VerPrimero(const tCola *cola, void *dato, unsigned tam)
 //////////////////////////////////////////////////////////////////////////////////////////
 int PonerEnCola(tCola *cola, const void *dato, unsigned tam)
 {
-    tNodo *nuevo;
+    tNodoCola *nuevo;
 
-    nuevo=malloc(sizeof(tNodo));
+    nuevo=malloc(sizeof(tNodoCola));
     if(nuevo==NULL)
         return 0;
 
@@ -82,7 +82,7 @@ int PonerEnCola(tCola *cola, const void *dato, unsigned tam)
 //////////////////////////////////////////////////////////////////////////////////////////
 int SacarDeCola(tCola *cola, void *dato, unsigned tam)
 {
-    tNodo *elim=cola->primero;
+    tNodoCola *elim=cola->primero;
     if(elim==NULL)
         return 0;
 

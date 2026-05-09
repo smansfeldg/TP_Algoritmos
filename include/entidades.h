@@ -61,13 +61,18 @@ typedef struct {
 typedef struct {
     tLista tablero;
     tJugador jugador;
-    tBandido bandidos[10];
-    int cantidadBandidos;
+    tLista bandidos;
     tCola colaMovimientos;
     tConfiguracion config;
     int turnoActual;
     int juegoActivo;
 } tJuego;
+
+typedef struct {
+    char nombre[MAX_NOMBRE];
+    int puntos;
+    int victoria;
+} tRegistroPuntaje;
 
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas);
 void crearBandido(tBandido *b, int id, int posicion);
@@ -87,7 +92,6 @@ int desencolarMovimiento(tCola *cola, tMovimiento *mov);
 void mostrarColaMovimientos(const tCola *cola);
 int moverBandido(tLista *tablero, tBandido *b, const tJugador *j, int totalCasillas);
 int verificarColision(const tJugador *j, const tBandido *b);
-void procesarColision(tJuego *juego, int indiceBandido);
 int verificarVictoria(const tJugador *j, const tLista *tablero);
 int verificarDerrota(const tJugador *j);
 void guardarCaravana(const char *archivo, const tJuego *juego);

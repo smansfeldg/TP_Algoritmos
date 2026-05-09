@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "entidades.h"
 
 #define ERROR_ARCH 0
 #define ERROR_MEM -1
@@ -27,6 +28,10 @@ int cerrarArchivo(FILE ** arch, const char *nombreArchivo, int mostrarError);
 
 int leerArchivoTxt(FILE* arch, void *estDatos, unsigned tam, unsigned tamLinea, accion Accion, accion Cargar);
 int leerArchivoBin(FILE* arch, void *estDatos, unsigned tam, accion Accion, accion Cargar);
+
+// Manejo de puntajes (registros)
+int guardarPuntaje(const char *nombreArchivo, const void *registro);
+int leerPuntajes(const char *nombreArchivo, void *registros, int maxRegistros);
 
 int buscarRegistro(FILE* arch, void *reg,const void *dato, unsigned tam, cmp Cmp);
 int leerPos(FILE* arch, void *dato, unsigned tam, int pos);
