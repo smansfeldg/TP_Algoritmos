@@ -42,10 +42,17 @@ int main()
     return 0;
 }
 
-void jugar()
-{
+void jugar(){
+    tJuego juego;
+    tConfiguracion cfg;
+    int resultado, idJugador; //ID DEL JUGADOR PARA REGISTRAR LA PARTIDA - PUEDE IR EN JUGADOR
     char nombre[MAX_NOMBRE];
 
+    //HACER FUNCION PARA CARGAR INDICE
+    //CARGAR INDICE
+
+
+    /* HACER FUNCIÓN - DEBE BUSCAR EN EL ARCHIVO DE USUARIOS POR EL INDICE
     printf("\nIngrese su nombre: ");
     while (getchar() != '\n');
     fgets(nombre, MAX_NOMBRE, stdin);
@@ -54,9 +61,7 @@ void jugar()
     if (strlen(nombre) == 0) {
         strcpy(nombre, "Jugador1");
     }
-
-    tJuego juego;
-    tConfiguracion cfg;
+    */
 
     cargarConfiguracion("config.txt", &cfg);
     mostrarConfiguracion(&cfg);
@@ -70,20 +75,26 @@ void jugar()
     pausar_consola();
 
     while (juego.juegoActivo) {
-        int resultado = ejecutarTurno(&juego);
+        printf("\nContinuar...");
+        pausar_consola();
+        limpiar_pantalla();
+        mostrarTablero(&juego.tablero);
 
+        resultado = ejecutarTurno(&juego);
+
+        //REEMPLAZAR POR MOSTRAR FIN JUEGO
         if (resultado == 2) {
             printf("\n*** HAS GANADO! ***\n");
-            break;
+            juego.juegoActivo = 0;//PUESTO PROVISORIAMENTE, DEBE IR EN VERIFICAR DERROTA Y VICTORIA
         }
         if (resultado == 0) {
             printf("\n*** HAS PERDIDO ***\n");
-            break;
+            juego.juegoActivo = 0;//PUESTO PROVISORIAMENTE, DEBE IR EN VERIFICAR DERROTA Y VICTORIA
         }
-
-        printf("\nContinuar...");
-        pausar_consola();
     }
+
+    //HACER UNA FUNCION PARA GUARDAR INDICE
+    //GUARDAR INDICE
 
     printf("\n--- Resumen de Movimientos ---\n");
     mostrarColaMovimientos(&juego.colaMovimientos);
@@ -93,7 +104,10 @@ void jugar()
     reg.nombre[MAX_NOMBRE - 1] = '\0';
     reg.puntos = juego.jugador.puntos;
     reg.victoria = (juego.jugador.vidas > 0);
+
+    /*HACER FUNCION - GUARDAR EN EL ARHIVO DE PARTIDAS
     guardarPuntaje("puntajes.dat", &reg);
+    */
 
     liberarJuego(&juego);
 

@@ -28,6 +28,7 @@ typedef struct {
     char descripcion[50];
 } tCasilla;
 
+//DEBE TENER ID
 typedef struct {
     char nombre[MAX_NOMBRE];
     int posicion;
@@ -43,6 +44,9 @@ typedef struct {
     int activo;
 } tBandido;
 
+//DEBE USAR UN PUNTERO PARA INDICAR QUIEN REALIZAR EL MOVIMIENTO
+//ID NO ES CONVENIENTE POR DIFERENCIAS DE NUMERACION ENTRE JUGADOR Y BANDIDO
+//SALVO QUE SE CREEN A CONSECUENCIA DEL ID DEL JUGADOR
 typedef struct {
     char direccion;
     int pasos;
@@ -58,6 +62,7 @@ typedef struct {
     int cantidadTormentas;
 } tConfiguracion;
 
+//NECESITA UNA COLA PARA TODOS LOS MOVIMIENTOS DEL JUGADOR
 typedef struct {
     tLista tablero;
     tJugador jugador;
@@ -68,11 +73,14 @@ typedef struct {
     int juegoActivo;
 } tJuego;
 
+//DEBE TENER ID PARTIDA
 typedef struct {
-    char nombre[MAX_NOMBRE];
+    char nombre[MAX_NOMBRE]; //DEBE SER ID DEL JUGADOR
     int puntos;
-    int victoria;
-} tRegistroPuntaje;
+    int victoria; //NO VA
+} tRegistroPuntaje; //tRegistroPartida
+
+//PUEDE HABER UN REGISTRO PARA EL RANKING (ID JUGADOR, PUNTAJE TOTAL, CANTIDAD DE PARTIDAS)
 
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas);
 void crearBandido(tBandido *b, int id, int posicion);

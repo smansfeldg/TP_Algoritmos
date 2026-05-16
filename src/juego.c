@@ -2,59 +2,131 @@
 #include <time.h>
 #include <ctype.h>
 
+//VA EN "jugar"
 void mostrarBienvenida()
 {
-
+  //IMPRIME EL MENSAJE BIENVENIDA
 }
 
+//NO HACE FALTA
 int iniciarPartida(tJuego *juego, const char *nombreJugador)
 {
     return 1;
 }
 
+//VA EN "procesarMovimientoJugador"
 int lanzarDado()
 {
     return (rand() % 6) + 1; // analizar posibilidad de usar una función más robusta
 }
 
+//VA EN "procesarMovimientoJugador"
 char obtenerDireccionMovimiento()
 {
     char dir;
+    //LE PIDE AL JUGADOR QUE INGRESE UNO DE LOS CARACTERES DE MOVIMIENTO
+    //HASTA QUE NO INGRESE UNO VALIDO LE SIGUE PIDIENDO
+    //R - RETROCEDER
+    //A - AVANZAR
     return dir;
 }
 
+//NO VA
 int obtenerPasosMovimiento()
 {
     int pasos;
     return pasos;
 }
 
+//EN DEBATE
 void mostrarTableroConPosiciones(const tJuego *juego)
 {
 
 }
 
+//VA EN "ejecutarTurno"
 int procesarMovimientoJugador(tJuego *juego)
 {
+    int sentido;
+    //TOMA EL PRIMER MOVIMIENTO DE LA COLA
+    //(PUEDE LOOPEAR CADA 0,3s ACTUALIZANDO EL TABLERO PARA MOSTRAR EL MOVIMIENTO) -moverJugador
+    //AVANZA DE A 1 EN EL SENTIDO INDICADO                                         -
+    //SI CASILLA = ULTIMA/REFUGIO                                                  -
+    // EL MOVIMIENTO DEBERA CAMBIAR DE SENTIDO HASTA FINALIZAR EL PROCESAMIENTO    -
+    //MIENTRAS DETECTAR COLICION = VERDADERO (DEBE PROBAR COLISION CON CADA BANDIDO Y EL MISMO DEBE ESTAR ACTIVO)
+    // DEBE PROCESAR EL GOLPE AL JUGADOR (POSICION = 1, VIDA -= 1)(EN BASE A LA PROTECCION DEL JUGADOR)
+    //FIN MIENTRAS
+    //DEBE COMPROBAR LA CASILLA
+    //SI CASILLA = CASILLA DE EFECTO
+    // APLICAR EFECTO AL JUGADOR
     return 1;
 }
 
+//VA EN "ejecutarTurno"
+int procesarMovimientoBandidos(tJuego *juego)
+{
+    int sentido;
+    //TOMA EL PRIMER MOVIMIENTO DE LA COLA
+    //OBTIENE AL BANDIDO POR EL PUNTERO
+    //SI EL BANDIDO ESTA ACTIVO
+    //  (PUEDE LOOPEAR CADA 0,3s ACTUALIZANDO EL TABLERO PARA MOSTRAR EL MOVIMIENTO)
+    //  AVANZA DE A 1 EN EL SENTIDO INDICADO
+    //  SI CASILLA = ULTIMA/REFUGIO && SENTIDO = 1
+    //   DEBE IR A CASILLA = PRIMERA/1
+    //  SI CASILLA = PRIMERA/1 && SENTIDO = -1
+    //   DEBE IR A CASILLA ULTIMA/REFUGIO
+    //  MIENTRAS DETECTAR COLICION = VERDADERO (DEBE PROBAR COLISION CON EL JUGADOR)
+    //   DEBE PROCESAR EL GOLPE AL JUGADOR (POSICION = 1, VIDA -= 1)(EN BASE A LA PROTECCION DEL JUGADOR)
+    //  FIN MIENTRAS
+    return 1;
+}
+
+//NO VA O REEMPLAZAR POR "POR CADA BANDIDO" EN ejecutarTurno
 void jugarTurnoComputadora(tJuego *juego)
 {
 
 }
 
-int ejecutarTurno(tJuego *juego)
-{
-    return 1;
+//VA EN "jugar"
+int ejecutarTurno(tJuego *juego){
+    int estadoJuego=1;//0-DERROTA 1-JUGANDO 2-DERROTA
+    //INDICAR AL JUGADOR QUE LANCE EL DADO         -procesarMovimientoJugador
+    //LANZAR DADO                                  -
+    //PREGUNTARLE AL JUGADOR A QUE LADO MOVERSE    -
+    //SI NO ES POSIBLE AVISAR Y VOLVER A PREGUNTAR -
+    //ENCOLAR MOVIMIENTO JUGADOR
+    //GUARDAR MOVIMIENTO EN COLA DE MOVIMIENTOS DEL JUGADOR
+    //POR CADA BANDIDO
+    // LANZAR EL DADO
+    // HACER ALGORITMO PARA COMPROBAR QUE TAN CERCA ESTÁ DEL JUGADOR Y MOVERSE A ESA DIRECCION
+    // ENCOLAR MOVIMIENTO BANDIDO
+    //FIN POR BANDIDO
+    //POR CADA MOVIMIENTO EN COLA (Y SI JUEGO ACTIVO)
+    // DESENCOLAR MOVIMIENTO
+    // REALIZAR MOVIMIENTO
+    // SI BANDIDO
+    //  COMPROBAR COLISION CON JUGADOR
+    // SI JUGADOR
+    //  COMPROBAR CONTENIDO DE CASILLA
+    //  COMPROBAR COLISION CON TODOS LOS BANDIDOS
+    // (SE PUEDE HACER TENIENDO EN CUENTA QUE EL JUGADOR ES QUIEN SE MUEVE PRIMERO)
+    // VERIFICAR CONDICION DE VICTORIA
+    // VERIFICAR CONDICION DE DERROTA
+    //FIN POR MOVIMIENTO
+    return estadoJuego;
 }
 
+//VA EN "jugar"
 void mostrarFinJuego(int victoria, const tJugador *j)
 {
-
+  //IMPRIME POR PANTALLA EL MENSAJE FINAL SEGUN EL RESULTADO DE LA PARTIDA
 }
 
+//NO VA
 int ejecutarJuego(const char *nombreJugador)
 {
     return 1;
 }
+
+//HACER UNA FUNCION PARA PROCESAR LAS PARTIDAS DE JUGADORES EN UNA LISTA ORDENADA POR PUNTOS TOTALES
+//HACER UNA FUNCION PARA MOSTRAR LA LISTA DE PUNTAJES
