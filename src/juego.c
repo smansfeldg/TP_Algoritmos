@@ -31,13 +31,6 @@ char obtenerDireccionMovimiento()
     return dir;
 }
 
-//NO VA
-int obtenerPasosMovimiento()
-{
-    int pasos;
-    return pasos;
-}
-
 //EN DEBATE
 void mostrarTableroConPosiciones(const tJuego *juego)
 {
@@ -97,7 +90,6 @@ int ejecutarTurno(tJuego *juego){
     //ENCOLAR MOVIMIENTO JUGADOR
     //GUARDAR MOVIMIENTO EN COLA DE MOVIMIENTOS DEL JUGADOR
     //POR CADA BANDIDO
-    // LANZAR EL DADO
     // HACER ALGORITMO PARA COMPROBAR QUE TAN CERCA ESTÁ DEL JUGADOR Y MOVERSE A ESA DIRECCION
     // ENCOLAR MOVIMIENTO BANDIDO
     //FIN POR BANDIDO
@@ -120,12 +112,6 @@ int ejecutarTurno(tJuego *juego){
 void mostrarFinJuego(int victoria, const tJugador *j)
 {
   //IMPRIME POR PANTALLA EL MENSAJE FINAL SEGUN EL RESULTADO DE LA PARTIDA
-}
-
-//NO VA
-int ejecutarJuego(const char *nombreJugador)
-{
-    return 1;
 }
 
 //HACER UNA FUNCION PARA PROCESAR LAS PARTIDAS DE JUGADORES EN UNA LISTA ORDENADA POR PUNTOS TOTALES

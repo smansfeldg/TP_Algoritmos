@@ -20,12 +20,6 @@ void crearBandido(tBandido *b, int id, int posicion)
     b->activo = 1;
 }
 
-//NO VA
-void inicializarConfiguracion(tConfiguracion *cfg)
-{
-
-}
-
 int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
 {
     //ABRE EL ARCHIVO DE CONFIGURACION
@@ -121,8 +115,7 @@ int desencolarMovimiento(tCola *cola, tMovimiento *mov)
     return 1; //SacarDeCola
 }
 
-//NO PODÉS MOSTRAR UNA COLA DE MOVIMIENTOS CONST PORQUE LA TENÉS QUE VACIAR SI O SI
-void mostrarColaMovimientos(const tCola *cola)
+void mostrarColaMovimientos(tCola *cola)
 {
   //MIENTRAS COLA NO SEA VACIA
   // DESAPILAR MOVIMIENTO
@@ -151,8 +144,6 @@ int verificarDerrota(const tJugador *j)
     return (j->vidas <= 0);
 }
 
-//ESTAS FUNCIONES NO VAN / DEBERIAN SE CON RESPECTO A LAS PARTIDAS
-//ADEMAS DEBERIA HABER UN PAR PARA GUARDAR Y CARGAR JUGADORES
 void guardarCaravana(const char *archivo, const tJuego *juego)
 {
 
@@ -162,3 +153,5 @@ int cargarCaravana(const char *archivo, tJuego *juego)
 {
     return 1;
 }
+
+//ADEMAS DEBERIA HABER UN PAR DE FUNCIONES PARA GUARDAR Y CARGAR JUGADORES, OTRO PAR PARA LAS PARTIDAS Y OTRO PAR PARA EL INDICE

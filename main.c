@@ -45,7 +45,7 @@ int main()
 void jugar(){
     tJuego juego;
     tConfiguracion cfg;
-    int resultado, idJugador; //ID DEL JUGADOR PARA REGISTRAR LA PARTIDA - PUEDE IR EN JUGADOR
+    int resultado;
     char nombre[MAX_NOMBRE];
 
     //HACER FUNCION PARA CARGAR INDICE
