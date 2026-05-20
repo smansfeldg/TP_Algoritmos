@@ -2,6 +2,7 @@
 #include <time.h>
 #include <ctype.h>
 
+//LISTO
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas)
 {
     strncpy(j->nombre, nombre, MAX_NOMBRE - 1);
@@ -13,6 +14,7 @@ void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vida
     j->perdidoTurno = 0;
 }
 
+//LISTO
 void crearBandido(tBandido *b, int id, int posicion)
 {
     b->id = id;
@@ -20,6 +22,7 @@ void crearBandido(tBandido *b, int id, int posicion)
     b->activo = 1;
 }
 
+//HACER
 int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
 {
     //ABRE EL ARCHIVO DE CONFIGURACION
@@ -31,11 +34,13 @@ int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
     return 1;
 }
 
-void mostrarConfiguracion(const tConfiguracion *cfg)
-{
-  //IMPRIME UN MENSAJE MOSTRANDO CADA CAMPO CON SU VALOR
+//LISTO
+void mostrarConfiguracion(const tConfiguracion *cfg){
+  printf("Los parametros de configuracion son:\nCantidad de Casillas del Tablero:\t%d\nCantidad de Oasis:\t%d\nCantidad de Premios:\t%d\nCantidad de Tormentas:\t%d\nCantidad de Vidas Extra:\t%d\nCantidad de Vida Inicial:\t%d\nCantidad de Bandidos:\t%d\n",
+         cfg->totalCasillas,cfg->cantidadOasis,cfg->cantidadPremios,cfg->cantidadTormentas,cfg->cantidadVidas,cfg->vidasIniciales,cfg->cantidadBandidos);
 }
 
+//HACER
 int generarTablero(tLista *tablero, const tConfiguracion *cfg)
 {
     //CREA CASILLA POR CASILLA EN BUCLE
@@ -46,26 +51,44 @@ int generarTablero(tLista *tablero, const tConfiguracion *cfg)
     return 1;
 }
 
+//EN DEBATE
 void mostrarTablero(const tLista *tablero)
 {
     //A DEBATIR
 }
 
+//HACER
 //DEBERIA HABER UNA FUNCIÓN PARA BUSCAR EN LA IMPLEMENTACION DE LISTA CIRCULAR
 //ESTA FUNCION DEBERIA RECIBIR UNA FUNCION DE COMPARACION DE PARA POSICION DE CASILLAS
-int buscarCasilla(const tLista *tablero, int posicion, tCasilla *casilla)
+tCasilla* buscarCasilla(const tLista *tablero, int posicion)
 {
     //DEBERIA LLAMAR LA FUNCION DE BUSQUEDA CON LA FUNCION DE BUSQUEDA DE POSICION DE CASILLA
     return 0;
 }
 
-//VA EN "procesarMovimientoJugador"
-int moverJugador(tLista *tablero, tJugador *j, int pasos, char direccion, int totalCasillas)
-{
-    int nuevaPos;
+//LISTA
+int moverJugador(tJuego* juego, tMovimiento movimiento){
+    int nuevaPos, sentido;
+
+    if(movimiento.direccion == 'F'){
+      sentido = 1;
+    }
+    else if(movimiento.direccion == 'B'){
+      sentido = -1;
+    }
+
+    nuevaPos = juego->jugador.posicion + movimiento.pasos*sentido;
+
+    if(nuevaPos > juego->config.totalCasillas){
+      nuevaPos = juego->config.totalCasillas - (nuevaPos%juego->config.totalCasillas);
+    }
+
+    posicionarJugador(juego, nuevaPos);
+
     return nuevaPos;
 }
 
+//LISTA PERO REVISAR SI SE PUEDE USAR PARA VERIFICAR VICTORIA
 void aplicarEfectoCasilla(tJugador *j, char tipoCasilla)
 {
     switch (tipoCasilla)
@@ -89,69 +112,140 @@ void aplicarEfectoCasilla(tJugador *j, char tipoCasilla)
     }
 }
 
-void mostrarEstadoJugador(const tJugador *j)
-{
-  //UTILIZA UN IF POR CADA CAMPO DEL JUGADOR Y MUESTRA UN MENSAJE SEGUN CORRESPONDA
+//LISTO
+void mostrarEstadoJugador(const tJugador *j){
+  if(j->perdidoTurno){
+    puts("EL JUGADOR PIERDE EL PROXIMO TURNO POR UNA TORMENTA DE ARENA");
+  }
+  if(j->protegidoOasis){
+    puts("EL JUGADOR DESCANSA EN UN OASIS Y ESTARA PROTEGIDO HASTA EL PROXIMO TURNO");
+  }
 }
 
-void inicializarJuego(tJuego *juego, const tConfiguracion *cfg, const char *nombreJugador)
-{
-  //INICIALIZA/INSTANCIA/CREA LOS ELEMENTOS DEL JUEGO CON LAS FUNCIONES CORRESPONDIENTES
+//HACER
+void inicializarJuego(tJuego *juego, tConfiguracion *cfg){
+  juego->config = *cfg;
+  CrearCola(&juego->colaMovimientos);
+  CrearCola(&juego->colaMovimientosJugador);
+  crearLista(&juego->bandidos);
+  juego->totalMovimientos=0;
+  juego->juegoActivo=1;
+  juego->turnoActual=1;
+
+  generarTablero(&juego->tablero,cfg);
 }
 
+//HACER
 void liberarJuego(tJuego *juego)
 {
   //LO QUE DICE EL NOMBRE
 }
 
-int encolarMovimiento(tCola *cola, char direccion, int pasos)
-{
-  //LO QUE DICE EL NOMBRE
+//HACER
+int encolarMovimiento(tCola *cola, tMovimiento movimiento){
+  return PonerEnCola(cola,&movimiento,sizeof(tMovimiento));
 }
 
-int desencolarMovimiento(tCola *cola, tMovimiento *mov)
-{
-    //LO QUE DICE EL NOMBRE
-    return 1; //SacarDeCola
+//LISTO
+int desencolarMovimiento(tCola *cola, tMovimiento *mov){
+    return SacarDeCola(cola,mov,sizeof(tMovimiento)); //SacarDeCola
 }
 
-void mostrarColaMovimientos(tCola *cola)
-{
-  //MIENTRAS COLA NO SEA VACIA
-  // DESAPILAR MOVIMIENTO
-  // IMPRIMIR MOVIMIENTO
+//LISTO
+void mostrarColaMovimientos(tCola *cola){
+  tMovimiento mov;
+
+  puts("Movimientos realizados por el jugador:");
+  while(!ColaVacia(cola)){
+    desencolarMovimiento(cola,&mov);
+    printf("%c%d\n",mov.direccion,mov.pasos);
+  }
 }
 
-//VA EN procesarMovimientosBandido
-int moverBandido(tLista *tablero, tBandido *b, const tJugador *j, int totalCasillas)
-{
-    return 1; //b->posicion;
+//LISTO
+int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento){
+    int nuevaPos, sentido;
+
+    if(movimiento.direccion == 'F'){
+      sentido = 1;
+    }
+    else if(movimiento.direccion == 'B'){
+      sentido = -1;
+    }
+
+    nuevaPos = b->posicion + movimiento.pasos*sentido;
+
+    if(nuevaPos > juego->config.totalCasillas){
+      nuevaPos = (nuevaPos%juego->config.totalCasillas);
+    }
+
+    if(nuevaPos < 1){
+      nuevaPos *= -1;
+    }
+
+    b->posicion = nuevaPos;
+
+    verificarColision(juego, b);
+    return 1;
 }
 
-int verificarColision(const tJugador *j, const tBandido *b)
-{
-    return (j->posicion == b->posicion && b->activo);
+//LISTO
+int verificarColision(tJuego *juego, tBandido *b){
+    int colision;
+
+    if( (colision = ((juego->jugador.posicion == b->posicion)) && b->activo)){
+      b->activo = 0;
+      if(!juego->jugador.protegidoOasis){
+        juego->jugador.vidas -= 1;
+        posicionarJugador(juego, 1);
+      }
+    }
+
+    return colision;
 }
 
+//REVISAR (EN ESPECIAL LOS PARAMETROS)
 int verificarVictoria(const tJugador *j, const tLista *tablero)
 {
     //LO QUE DICE EL NOMBRE
     return 0;
 }
 
+//LISTO
 int verificarDerrota(const tJugador *j)
 {
     return (j->vidas <= 0);
 }
 
+//HACER
 void guardarCaravana(const char *archivo, const tJuego *juego)
 {
 
 }
 
+//HACER
 int cargarCaravana(const char *archivo, tJuego *juego)
 {
     return 1;
+}
+
+//LISTO
+int posicionarJugador(tJuego *juego, int posicion){
+  tNodoListaC *bandidoActual, *bandidoIni;
+
+  juego->jugador.posicion=posicion;
+
+  //GUARDAR EL PRIMER BANDIDO
+  bandidoIni = juego->bandidos;
+  bandidoActual = bandidoIni;
+  do{//RECORRER LISTA BANDIDOS
+    if(verificarColision(juego, bandidoActual->info)){
+      break;
+    }
+    bandidoActual = juego->bandidos->sig;
+  }while( ((tBandido*)(bandidoActual->info))->id != ((tBandido*)(bandidoIni->info))->id);
+
+  return 1;
 }
 
 //ADEMAS DEBERIA HABER UN PAR DE FUNCIONES PARA GUARDAR Y CARGAR JUGADORES, OTRO PAR PARA LAS PARTIDAS Y OTRO PAR PARA EL INDICE

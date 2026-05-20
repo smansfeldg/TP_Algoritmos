@@ -1,114 +1,178 @@
 #include "../include/juego.h"
 #include <time.h>
 #include <ctype.h>
+#include <stdio.h>
 
-//VA EN "jugar"
+//HACER
 void mostrarBienvenida()
 {
   //IMPRIME EL MENSAJE BIENVENIDA
 }
 
-//NO HACE FALTA
-int iniciarPartida(tJuego *juego, const char *nombreJugador)
-{
-    return 1;
+//COMPLETAR
+int iniciarPartida(tJuego *juego){
+  char nombre[MAX_NOMBRE];
+
+  //REVISAR HACERLO MÁS SIMPLE Y PRÁCTICO
+  printf("\nIngrese su nombre de jugador: ");
+  while (getchar() != '\n');
+  fgets(nombre, MAX_NOMBRE, stdin);
+  nombre[strcspn(nombre, "\n")] = 0;
+
+  //NO VA
+  if (strlen(nombre) == 0) {
+      strcpy(nombre, "Jugador1");
+  }
+  //DEBE BUSCAR EN EL ARCHIVO DE USUARIOS POR EL INDICE
+
+  crearJugador(&juego->jugador,nombre,1,juego->config.vidasIniciales);
+
+  return 1;
 }
 
-//VA EN "procesarMovimientoJugador"
-int lanzarDado()
-{
+//LISTA
+int lanzarDado(){
     return (rand() % 6) + 1; // analizar posibilidad de usar una función más robusta
 }
 
-//VA EN "procesarMovimientoJugador"
-char obtenerDireccionMovimiento()
-{
-    char dir;
-    //LE PIDE AL JUGADOR QUE INGRESE UNO DE LOS CARACTERES DE MOVIMIENTO
-    //HASTA QUE NO INGRESE UNO VALIDO LE SIGUE PIDIENDO
-    //R - RETROCEDER
-    //A - AVANZAR
-    return dir;
-}
-
-//EN DEBATE
+//EN DEBATE - HACER
 void mostrarTableroConPosiciones(const tJuego *juego)
 {
 
 }
 
-//VA EN "ejecutarTurno"
-int procesarMovimientoJugador(tJuego *juego)
-{
-    int sentido;
-    //TOMA EL PRIMER MOVIMIENTO DE LA COLA
-    //(PUEDE LOOPEAR CADA 0,3s ACTUALIZANDO EL TABLERO PARA MOSTRAR EL MOVIMIENTO) -moverJugador
-    //AVANZA DE A 1 EN EL SENTIDO INDICADO                                         -
-    //SI CASILLA = ULTIMA/REFUGIO                                                  -
-    // EL MOVIMIENTO DEBERA CAMBIAR DE SENTIDO HASTA FINALIZAR EL PROCESAMIENTO    -
-    //MIENTRAS DETECTAR COLICION = VERDADERO (DEBE PROBAR COLISION CON CADA BANDIDO Y EL MISMO DEBE ESTAR ACTIVO)
-    // DEBE PROCESAR EL GOLPE AL JUGADOR (POSICION = 1, VIDA -= 1)(EN BASE A LA PROTECCION DEL JUGADOR)
-    //FIN MIENTRAS
-    //DEBE COMPROBAR LA CASILLA
-    //SI CASILLA = CASILLA DE EFECTO
-    // APLICAR EFECTO AL JUGADOR
-    return 1;
+//LISTA/VERIFICAR
+int procesarMovimientoJugador(tJuego *juego){
+  tMovimiento nuevoMovimiento;
+
+  puts("Presione cualquier tecla para lanzar el dado. . .");
+  getc(stdin);
+
+  nuevoMovimiento.pasos=lanzarDado();
+  nuevoMovimiento.entidad= &(juego->jugador);
+  //LE PIDE AL JUGADOR QUE INGRESE UNO DE LOS CARACTERES DE MOVIMIENTO
+  //HASTA QUE NO INGRESE UNO VALIDO LE SIGUE PIDIENDO
+  //B - RETROCEDER
+  //F - AVANZAR
+  do{
+    printf("Ingrese como quiere avanzar:");
+    if((juego->jugador.posicion - nuevoMovimiento.pasos) >= 0){
+      puts("  B - Retroceder");
+    }
+    puts("  F - Avanzar:");
+
+    fflush(stdin);
+    nuevoMovimiento.direccion = getc(stdin);
+  }while( !( (nuevoMovimiento.direccion == 'B') && ((juego->jugador.posicion - nuevoMovimiento.pasos) >= 0) )
+       || !(nuevoMovimiento.direccion == 'F') );
+
+  encolarMovimiento(&juego->colaMovimientos,nuevoMovimiento);
+  encolarMovimiento(&juego->colaMovimientosJugador,nuevoMovimiento);
+
+  return 1;
 }
 
-//VA EN "ejecutarTurno"
-int procesarMovimientoBandidos(tJuego *juego)
-{
-    int sentido;
-    //TOMA EL PRIMER MOVIMIENTO DE LA COLA
-    //OBTIENE AL BANDIDO POR EL PUNTERO
-    //SI EL BANDIDO ESTA ACTIVO
-    //  (PUEDE LOOPEAR CADA 0,3s ACTUALIZANDO EL TABLERO PARA MOSTRAR EL MOVIMIENTO)
-    //  AVANZA DE A 1 EN EL SENTIDO INDICADO
-    //  SI CASILLA = ULTIMA/REFUGIO && SENTIDO = 1
-    //   DEBE IR A CASILLA = PRIMERA/1
-    //  SI CASILLA = PRIMERA/1 && SENTIDO = -1
-    //   DEBE IR A CASILLA ULTIMA/REFUGIO
-    //  MIENTRAS DETECTAR COLICION = VERDADERO (DEBE PROBAR COLISION CON EL JUGADOR)
-    //   DEBE PROCESAR EL GOLPE AL JUGADOR (POSICION = 1, VIDA -= 1)(EN BASE A LA PROTECCION DEL JUGADOR)
-    //  FIN MIENTRAS
-    return 1;
+//LISTA/VERIFICAR
+int procesarMovimientoBandidos(tJuego *juego){
+  tLista* listaBandidos; //SI SE UTILIZA UNA FUNCION RECORRER LISTA ESTO NO VA
+  tBandido* bandidoActual; //SI SE UTILIZA UNA FUNCION RECORRER LISTA ESTO NO VA
+  listaBandidos = &juego->bandidos; //SI SE UTILIZA UNA FUNCION RECORRER LISTA ESTO NO VA
+  tMovimiento nueMov;
+  int posJugador;
+  posJugador = juego->jugador.posicion;
+
+//REEMPLAZAR POR UNA FUNCION DE RECORRER LISTA
+//  while(obtenerYAvanzarLista(listaBandidos, bandidoActual)){
+    nueMov.pasos=lanzarDado();
+    nueMov.entidad=bandidoActual;
+    //HACER FUNCION
+    //SI POSJUGADOR < POSBANDIDO
+    if(posJugador < bandidoActual->posicion) {
+      // SI (TOTAL CASILLAS + POSJUGADOR) - POSBANDIDO < POSBANDIDO - POSJUGADOR
+      //  AVANZAR
+      // SINO
+      //  RETROCEDER
+      if( ((juego->config.totalCasillas+posJugador)-bandidoActual->posicion) < (bandidoActual->posicion-posJugador) ){
+        nueMov.direccion = 'F';
+      }
+      else{
+        nueMov.direccion = 'B';
+      }
+    }
+    else{
+      //SINO
+      // SI (TOTAL CASILLAS + POSBANDIDO) - POSJUGADOR < POSJUGADOR - POSBANDIDO
+      //  RETROCEDER
+      // SINO
+      //  AVANZAR
+      if( ((juego->config.totalCasillas+bandidoActual->posicion)-posJugador) < (posJugador-bandidoActual->posicion) ){
+        nueMov.direccion = 'B';
+      }
+      else{
+        nueMov.direccion = 'F';
+      }
+    }
+
+    encolarMovimiento(&juego->colaMovimientos,nueMov);
+//  }
+
+  return 1;
 }
 
-//NO VA O REEMPLAZAR POR "POR CADA BANDIDO" EN ejecutarTurno
-void jugarTurnoComputadora(tJuego *juego)
-{
+//LISTA/VERIFICAR
+void jugarTurnoComputadora(tJuego *juego){
+  tMovimiento nuevoMovimiento;
+  tBandido* bandido;
 
+  while(!ColaVacia(&juego->colaMovimientos)){ //(Y SI JUEGO ACTIVO) <---------------------------------------------
+    desencolarMovimiento(&juego->colaMovimientos, &nuevoMovimiento);
+    bandido = (tBandido*)nuevoMovimiento.entidad;
+    if(bandido->activo){
+      moverBandido(juego, bandido, nuevoMovimiento);
+    }
+  }
 }
 
-//VA EN "jugar"
+//COMPLETAR/DISCUTIR
 int ejecutarTurno(tJuego *juego){
-    int estadoJuego=1;//0-DERROTA 1-JUGANDO 2-DERROTA
-    //INDICAR AL JUGADOR QUE LANCE EL DADO         -procesarMovimientoJugador
-    //LANZAR DADO                                  -
-    //PREGUNTARLE AL JUGADOR A QUE LADO MOVERSE    -
-    //SI NO ES POSIBLE AVISAR Y VOLVER A PREGUNTAR -
-    //ENCOLAR MOVIMIENTO JUGADOR
-    //GUARDAR MOVIMIENTO EN COLA DE MOVIMIENTOS DEL JUGADOR
-    //POR CADA BANDIDO
-    // HACER ALGORITMO PARA COMPROBAR QUE TAN CERCA ESTÁ DEL JUGADOR Y MOVERSE A ESA DIRECCION
-    // ENCOLAR MOVIMIENTO BANDIDO
-    //FIN POR BANDIDO
-    //POR CADA MOVIMIENTO EN COLA (Y SI JUEGO ACTIVO)
-    // DESENCOLAR MOVIMIENTO
-    // REALIZAR MOVIMIENTO
-    // SI BANDIDO
-    //  COMPROBAR COLISION CON JUGADOR
-    // SI JUGADOR
-    //  COMPROBAR CONTENIDO DE CASILLA
-    //  COMPROBAR COLISION CON TODOS LOS BANDIDOS
-    // (SE PUEDE HACER TENIENDO EN CUENTA QUE EL JUGADOR ES QUIEN SE MUEVE PRIMERO)
-    // VERIFICAR CONDICION DE VICTORIA
-    // VERIFICAR CONDICION DE DERROTA
-    //FIN POR MOVIMIENTO
+    int estadoJuego=1;//0-DERROTA 1-JUGANDO 2-VICTORIA
+    tMovimiento nuevoMovimiento;
+
+    //HACER FUNCION
+    if(juego->jugador.protegidoOasis){
+      juego->jugador.protegidoOasis = 0;
+    }
+    if(juego->jugador.perdidoTurno){
+      juego->jugador.perdidoTurno = 0;
+    }
+
+    //FASE DE TIRAR DADOS
+    //JUGADOR
+    procesarMovimientoJugador(juego);
+    //BANDIDOS
+    procesarMovimientoBandidos(juego);
+
+    //FASE DE MOVER
+    //JUGADOR
+    desencolarMovimiento(&(juego->colaMovimientos), &nuevoMovimiento);
+    moverJugador(juego, nuevoMovimiento);
+    //AGREGAR: SUMAR UNO A LOS MOVIMIENTOS TOTALES DE LA PARTIDA
+    mostrarEstadoJugador(&(juego->jugador));
+    aplicarEfectoCasilla(&(juego->jugador), buscarCasilla(&juego->tablero,(juego->jugador).posicion)->tipo);
+    //BANDIDOS
+    jugarTurnoComputadora(juego);
+
+    //VERIFICAR CONDICION DE VICTORIA <------------------------------------------------------------ estadoJuego = verificarDerrota(&juego->jugador);
+    //VERIFICAR CONDICION DE DERROTA <------------------------------------------------------------- estadoJuego = verificarVictoria(&juego->jugador, &juego->tablero);
+    //EL ESTADO DEL JUEGO DEBERIA CAMBIAR EN EL MOVIMIENTO DEL JUGADOR Y DE LOS BANDIDOS
+    //PORQUE NO TIENE SENTIDO SEGUIR PROCESANDO SI YA FINALIZÓ EL JUEGO ADEMÁS DE OTRAS CUESTIONES
+
+    juego->turnoActual++;
+
     return estadoJuego;
 }
 
-//VA EN "jugar"
+//HACER
 void mostrarFinJuego(int victoria, const tJugador *j)
 {
   //IMPRIME POR PANTALLA EL MENSAJE FINAL SEGUN EL RESULTADO DE LA PARTIDA

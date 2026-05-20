@@ -45,33 +45,23 @@ int main()
 void jugar(){
     tJuego juego;
     tConfiguracion cfg;
+    tRegistroPartida reg;
     int resultado;
-    char nombre[MAX_NOMBRE];
 
     //HACER FUNCION PARA CARGAR INDICE
     //CARGAR INDICE
 
-
-    /* HACER FUNCIÓN - DEBE BUSCAR EN EL ARCHIVO DE USUARIOS POR EL INDICE
-    printf("\nIngrese su nombre: ");
-    while (getchar() != '\n');
-    fgets(nombre, MAX_NOMBRE, stdin);
-    nombre[strcspn(nombre, "\n")] = 0;
-
-    if (strlen(nombre) == 0) {
-        strcpy(nombre, "Jugador1");
-    }
-    */
-
     cargarConfiguracion("config.txt", &cfg);
     mostrarConfiguracion(&cfg);
 
-    inicializarJuego(&juego, &cfg, nombre);
+    inicializarJuego(&juego, &cfg);
+    iniciarPartida(&juego);
 
     guardarCaravana("caravana.txt", &juego);
 
-    printf("\nTablero generado! Posicion inicial: 0 (Inicio)\n");
-    printf("Objetivo: Llegar a la posicion %d (Refugio)\n", cfg.totalCasillas - 1);
+    mostrarBienvenida();
+    printf("\nTablero generado! Posicion inicial: 1 (Inicio)\n");
+    printf("Objetivo: Llegar a la posicion %d (Refugio)\n", cfg.totalCasillas);
     pausar_consola();
 
     while (juego.juegoActivo) {
@@ -99,11 +89,9 @@ void jugar(){
     printf("\n--- Resumen de Movimientos ---\n");
     mostrarColaMovimientos(&juego.colaMovimientos);
 
-    tRegistroPuntaje reg;
     strncpy(reg.nombre, juego.jugador.nombre, MAX_NOMBRE - 1);
     reg.nombre[MAX_NOMBRE - 1] = '\0';
-    reg.puntos = juego.jugador.puntos;
-    reg.victoria = (juego.jugador.vidas > 0);
+    reg.puntuacion = juego.jugador.puntos;
 
     /*HACER FUNCION - GUARDAR EN EL ARHIVO DE PARTIDAS
     guardarPuntaje("puntajes.dat", &reg);
@@ -111,6 +99,7 @@ void jugar(){
 
     liberarJuego(&juego);
 
-    printf("\nPartida finalizada!\n");
+
+    printf("\nPARTIDA FINALIZADA!\n");
     pausar_consola();
 }

@@ -10,6 +10,16 @@
 #define MAX_NOMBRE 50
 #define MAX_JUGADORES 100
 
+/*
+PRIORITARIO:
+AGREGAR LA ESTRUCTURA DE LISTA O LISTA DOBLEMENTE ENLAZADA
+CAMBIAR EL NOMBRE DE LA LISTA CIRCULAR
+CAMBIAR LAS LISTAS (EXCEPTO EL TABLERO) POR LISTAS COMUNES(QUE TENGAN FIN)
+LA LISTA NUEVA DEBE TENER UNA FUNCION DE OBTENER Y AVANZAR QUE DEVUELVA 0 SI LLEGA AL FINAL Y 1 SI DEVOLVIÓ ALGO
+SINO HACER UNA FUNCION PARA RECORRER LA LISTA CIRCULAR Y QUE RECIBA UN PARAMETRO Y UNA FUNCION POR PARÁMETRO
+DE SER ASI EL CONTENIDO DEL WHILE DE "PROCESARMOVIMIENTOBANDIDOS" DEBE SER LA FUNCIÓN QUE SE PASE COMO ARGUMENTO Y
+SE DEBERA AJUSTAR PARA ESO MISMO
+*/
 typedef enum {
     TIPO_NORMAL = '.',
     TIPO_INICIO = 'I',
@@ -69,10 +79,11 @@ typedef struct {
     tConfiguracion config;
     int turnoActual;
     int juegoActivo;
+    int totalMovimientos;
 } tJuego;
 
 typedef struct {
-    int idPartida
+    int idPartida;
     char nombre[MAX_NOMBRE];
     int puntuacion;
     int cantidadMovimientos;
@@ -96,20 +107,21 @@ int cargarConfiguracion(const char *archivo, tConfiguracion *cfg);
 void mostrarConfiguracion(const tConfiguracion *cfg);
 int generarTablero(tLista *tablero, const tConfiguracion *cfg);
 void mostrarTablero(const tLista *tablero);
-int buscarCasilla(const tLista *tablero, int posicion, tCasilla *casilla);
-int moverJugador(tLista *tablero, tJugador *j, int pasos, char direccion, int totalCasillas);
+tCasilla* buscarCasilla(const tLista *tablero, int posicion);
+int moverJugador(tJuego* juego, tMovimiento movimiento);
 void aplicarEfectoCasilla(tJugador *j, char tipoCasilla);
 void mostrarEstadoJugador(const tJugador *j);
-void inicializarJuego(tJuego *juego, const tConfiguracion *cfg, const char *nombreJugador);
+void inicializarJuego(tJuego *juego, tConfiguracion *cfg);
 void liberarJuego(tJuego *juego);
-int encolarMovimiento(tCola *cola, char direccion, int pasos);
+int encolarMovimiento(tCola *cola, tMovimiento mov);
 int desencolarMovimiento(tCola *cola, tMovimiento *mov);
-void mostrarColaMovimientos(const tCola *cola);
-int moverBandido(tLista *tablero, tBandido *b, const tJugador *j, int totalCasillas);
-int verificarColision(const tJugador *j, const tBandido *b);
+void mostrarColaMovimientos(tCola *cola);
+int moverBandido(tJuego* juego,tBandido *b,tMovimiento movimiento);
+int verificarColision(tJuego *juego, tBandido *b);
 int verificarVictoria(const tJugador *j, const tLista *tablero);
 int verificarDerrota(const tJugador *j);
 void guardarCaravana(const char *archivo, const tJuego *juego);
 int cargarCaravana(const char *archivo, tJuego *juego);
+int posicionarJugador(tJuego *juego, int posicion);
 
 #endif
