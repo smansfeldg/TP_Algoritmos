@@ -34,7 +34,7 @@ int cerrarArchivo(FILE ** arch, const char *nombreArchivo, int mostrarError)
 
 /////////////////////
 /////////////////////
-int leerArchivoTxt(FILE* arch, void *estDatos, unsigned tam, unsigned tamLinea, accion Accion, accion Cargar)
+int leerArchivoTxt(FILE* arch, void *estDatos, unsigned tam, unsigned tamLinea, accion Accion)
 {
     void *aux = malloc(tam);
     if(aux==NULL)
@@ -49,14 +49,10 @@ int leerArchivoTxt(FILE* arch, void *estDatos, unsigned tam, unsigned tamLinea, 
 
     rewind(arch);
 
-    fgets(linea,tamLinea,arch);
-    while(!feof(arch))
+    while(fgets(linea,tamLinea,arch)!=NULL)
     {
-        //Trozar linea y cargarla en aux.
+        //Trozar linea y cargarla en la estructura de datos correspondiente.
         Accion(aux, linea);
-        //Cargar aux en la estructura de datos correspondiente.
-        Cargar(estDatos, aux);
-        fgets(linea,tamLinea,arch);
     }
 
     free(linea);
@@ -66,34 +62,22 @@ int leerArchivoTxt(FILE* arch, void *estDatos, unsigned tam, unsigned tamLinea, 
 
 /////////////////////
 /////////////////////
-int leerArchivoBin(FILE* arch, void *estDatos, unsigned tam, accion Accion, accion Cargar)
+int leerArchivoBin(FILE* arch, void *estDatos, unsigned tam, accion Accion)
 {
     void *reg=malloc(tam);
     if(reg==NULL)
         return ERROR_MEM;
 
-    void *dato=malloc(tam);
-    if(dato==NULL)
-    {
-        free(reg);
-        return ERROR_MEM;
-    }
-
     rewind(arch);
 
-    fread(reg,tam,1,arch);
-    while(!feof(arch))
+    while(fread(reg,tam,1,arch)==1)
 
     {
-        //Trozar registro y cargarlo en dato.
-        Accion(dato, reg);
-        //Cargar dato en la estructura de datos correspondiente.
-        Cargar(estDatos, dato);
-        fread(reg,tam,1,arch);
+        //Trozar linea y cargarla en la estructura de datos correspondiente.
+        Accion(estDatos, reg);
     }
 
     free(reg);
-    free(dato);
     return OK;
 }
 
@@ -126,7 +110,7 @@ int buscarRegistro(FILE* arch, void *reg, const void *dato, unsigned tam, cmp Cm
     }
 
     free(aux);
-    //Si no se encuentra, devuelve -1 y ep puntero queda al final.
+    //Si no se encuentra, devuelve -1 y el puntero queda al final.
     return NO_ENCONTRADO;
 }
 
@@ -177,21 +161,8 @@ int escribirTxt(FILE *arch, void *dato, unsigned tamLinea, accion Accion)
     return OK;
 }
 
-// Funciones de puntaje
-int guardarPuntaje(const char *nombreArchivo, const void *registro)
+int escribirNuevoReg(FILE *arch, void *dato, unsigned tam)
 {
-    FILE *arch = fopen(nombreArchivo, "ab");
-    if(!arch) return 0;
-    int r = fwrite(registro, sizeof(tRegistroPartida), 1, arch);
-    fclose(arch);
-    return r == 1;
-}
-
-int leerPuntajes(const char *nombreArchivo, void *registros, int maxRegistros)
-{
-    FILE *arch = fopen(nombreArchivo, "rb");
-    if(!arch) return 0;
-    int leidos = fread(registros, sizeof(tRegistroPartida), maxRegistros, arch);
-    fclose(arch);
-    return leidos;
+    fseek(arch,0,SEEK_END);
+    return fwrite(dato, tam,1,arch)==1;
 }

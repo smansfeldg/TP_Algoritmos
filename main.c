@@ -89,8 +89,7 @@ void jugar(){
     printf("\n--- Resumen de Movimientos ---\n");
     mostrarColaMovimientos(&juego.colaMovimientos);
 
-    strncpy(reg.nombre, juego.jugador.nombre, MAX_NOMBRE - 1);
-    reg.nombre[MAX_NOMBRE - 1] = '\0';
+    reg.idJugador=juego.jugador.idJugador;
     reg.puntuacion = juego.jugador.puntos;
 
     /*HACER FUNCION - GUARDAR EN EL ARHIVO DE PARTIDAS
