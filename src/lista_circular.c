@@ -122,7 +122,6 @@ int mostrarDeIzqADer(const tLista *p,
     if(!*p)
         return 0;
 
-    mostrar(NULL);
     tNodoListaC *act = *p;
     do
     {
@@ -141,7 +140,6 @@ int mostrarDeDerAIzq(const tLista *p,
     if(!*p)
         return 0;
 
-    mostrar(NULL);
     tNodoListaC *act = (*p)->ant; /* Comenzamos desde el último */
     do
     {
@@ -265,4 +263,21 @@ int eliminarPorClave(tLista *p, void *d, unsigned cantBytes,
     } while(act != *p);
 
     return 0;
+}
+
+int recorrerListaYAccionar(const tLista *p, void *contexto, void (*accion)(void *info, void *contexto))
+{
+    int cant = 0;
+    if(!*p)
+        return 0;
+
+    tNodoListaC *act = *p;
+    do
+    {
+        accion(act->info, contexto);
+        act = act->sig;
+        cant++;
+    } while(act != *p);
+    
+    return cant;
 }
