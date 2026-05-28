@@ -35,10 +35,53 @@ int lanzarDado(){
     return (rand() % 6) + 1; // analizar posibilidad de usar una función más robusta
 }
 
+// Helper para comprobar si hay bandido en la posicion
+void checkBandidoPos(void *info, void *contexto)
+{
+    tBandido *b = (tBandido *)info;
+    struct { int pos; int *encontrado; } *ctx = contexto;
+    
+    if (b->activo && b->posicion == ctx->pos)
+    {
+        *(ctx->encontrado) = 1;
+    }
+}
+
+// Callback para imprimir una casilla puntual del tablero con posiciones
+void imprimirCasillaJuego(void *info, void *contexto)
+{
+    tCasilla *casilla = (tCasilla *)info;
+    const tJuego *juego = (const tJuego *)contexto;
+
+    if (juego->jugador.posicion == casilla->posicion)
+    {
+        printf("[J]");
+    }
+    else
+    {
+        int bandidoEnemigo = 0;
+        struct { int pos; int *encontrado; } ctxBandido = { casilla->posicion, &bandidoEnemigo };
+        recorrerListaYAccionar(&juego->bandidos, &ctxBandido, checkBandidoPos);
+
+        if (bandidoEnemigo)
+        {
+            printf("[B]");
+        }
+        else
+        {
+            printf("[%c]", casilla->tipo);
+        }
+    }
+}
+
 //EN DEBATE - HACER
 void mostrarTableroConPosiciones(const tJuego *juego)
 {
-
+    if (!juego) return;
+    
+    printf("\n--- Mapeo del Desierto ---\n");
+    recorrerListaYAccionar(&juego->tablero, (void *)juego, imprimirCasillaJuego);
+    printf("\n--------------------------\n");
 }
 
 //LISTA/VERIFICAR

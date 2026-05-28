@@ -51,10 +51,20 @@ int generarTablero(tLista *tablero, const tConfiguracion *cfg)
     return 1;
 }
 
+// Helper para mostrarCasilla
+void mostrarCasilla(const void *info)
+{
+    if (!info) return;
+    tCasilla *casilla = (tCasilla *)info;
+    printf("[%c]", casilla->tipo);
+}
+
 //EN DEBATE
 void mostrarTablero(const tLista *tablero)
 {
-    //A DEBATIR
+    printf("\nTablero: ");
+    mostrarDeIzqADer(tablero, mostrarCasilla);
+    printf("\n");
 }
 
 //HACER
