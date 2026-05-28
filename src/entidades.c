@@ -69,21 +69,101 @@ void mostrarConfiguracion(const tConfiguracion *cfg){
          cfg->totalCasillas,cfg->cantidadOasis,cfg->cantidadPremios,cfg->cantidadTormentas,cfg->cantidadVidas,cfg->vidasIniciales,cfg->cantidadBandidos);
 }
 
-//HACER
+// Ah debatir, pero esta logica provicional funciona
 int generarTablero(tLista *tablero, const tConfiguracion *cfg)
 {
-    //CREA CASILLA POR CASILLA EN BUCLE
-    //COMPROBAR QUE LA SUMA DE CASILLAS ESPECIALES SEA MENOR AL TAMAÑO DEL TABLERO - 2 (POR EL INICIO Y EL FINAL)
-    //UTILIZA UN ALGORITMO PARA ASIGNAR ALEATORIAMENTE LAS CASILLAS ESPECIALES Y QUE NO SE REPITAN
-    //ASIGNA ALEATORIAMENTE A LOS BANDIDOS
-    //UBICA AL JUGADOR EN LA PRIMER CASILLA
+    int i;
+    int sumaEspeciales = cfg->cantidadOasis + cfg->cantidadPremios + cfg->cantidadTormentas + cfg->cantidadVidas;
+
+    if (sumaEspeciales > cfg->totalCasillas - 2) {
+        return 0; // No se puede generar, demasiadas casillas especiales
+    }
+
+    tCasilla *casillas = (tCasilla*)malloc(sizeof(tCasilla) * cfg->totalCasillas);
+    if (!casillas) return 0;
+
+    // Inicializar todo como normal
+    for(i = 0; i < cfg->totalCasillas; i++)
+    {
+        casillas[i].posicion = i;
+        casillas[i].tipo = TIPO_NORMAL;
+        strcpy(casillas[i].descripcion, "Casilla Normal");
+    }
+
+    casillas[0].tipo = TIPO_INICIO;
+    strcpy(casillas[0].descripcion, "Inicio");
+    
+    // Asignar especiales aleatoriamente
+    int c;
+    
+    c = 0;
+    while(c < cfg->cantidadOasis) {
+        int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
+        if(casillas[pos].tipo == TIPO_NORMAL) {
+            casillas[pos].tipo = TIPO_OASIS;
+            strcpy(casillas[pos].descripcion, "Oasis");
+            c++;
+        }
+    }
+
+    c = 0;
+    while(c < cfg->cantidadPremios) {
+        int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
+        if(casillas[pos].tipo == TIPO_NORMAL) {
+            casillas[pos].tipo = TIPO_PREMIO;
+            strcpy(casillas[pos].descripcion, "Premio");
+            c++;
+        }
+    }
+
+    c = 0;
+    while(c < cfg->cantidadTormentas) {
+        int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
+        if(casillas[pos].tipo == TIPO_NORMAL) {
+            casillas[pos].tipo = TIPO_TORMENTA;
+            strcpy(casillas[pos].descripcion, "Tormenta");
+            c++;
+        }
+    }
+
+    c = 0;
+    while(c < cfg->cantidadVidas) {
+        int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
+        if(casillas[pos].tipo == TIPO_NORMAL) {
+            casillas[pos].tipo = TIPO_VIDA;
+            strcpy(casillas[pos].descripcion, "Vida Extra");
+            c++;
+        }
+    }
+    
+    // El ultimo nodo podría ser el refugio? El TP no lo especifica claro, asignemos al final.
+    casillas[cfg->totalCasillas - 1].tipo = TIPO_REFUGIO;
+    strcpy(casillas[cfg->totalCasillas - 1].descripcion, "Refugio / Fin");
+
+    // Insertar en la lista
+    for(i = 0; i < cfg->totalCasillas; i++)
+    {
+        insertarAlFinal(tablero, &casillas[i], sizeof(tCasilla));
+    }
+    
+    free(casillas);
     return 1;
+}
+
+// Helper para mostrarCasilla
+void mostrarCasilla(const void *info)
+{
+    if (!info) return;
+    tCasilla *casilla = (tCasilla *)info;
+    printf("[%c]", casilla->tipo);
 }
 
 //EN DEBATE
 void mostrarTablero(const tLista *tablero)
 {
-    //A DEBATIR
+    printf("\nTablero: ");
+    mostrarDeIzqADer(tablero, mostrarCasilla);
+    printf("\n");
 }
 
 //HACER
@@ -154,6 +234,7 @@ void mostrarEstadoJugador(const tJugador *j){
 //HACER
 void inicializarJuego(tJuego *juego, tConfiguracion *cfg){
   juego->config = *cfg;
+  crearLista(&juego->tablero); // Asegurar que la lista se inicializa a NULL, de forma provisoria qeuda así
   CrearCola(&juego->colaMovimientos);
   CrearCola(&juego->colaMovimientosJugador);
   crearLista(&juego->bandidos);
