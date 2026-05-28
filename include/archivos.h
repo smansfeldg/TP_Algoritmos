@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "entidades.h"
 
 #define ERROR_ARCH 0
 #define ERROR_MEM -1
@@ -26,12 +25,8 @@ typedef int (*cmp) (const void *a, const void *b);
 int abrirArchivo(FILE ** arch, const char *nombreArchivo, const char *modoApertura, int mostrarError);
 int cerrarArchivo(FILE ** arch, const char *nombreArchivo, int mostrarError);
 
-int leerArchivoTxt(FILE* arch, void *estDatos, unsigned tam, unsigned tamLinea, accion Accion, accion Cargar);
-int leerArchivoBin(FILE* arch, void *estDatos, unsigned tam, accion Accion, accion Cargar);
-
-// Manejo de puntajes (registros)
-int guardarPuntaje(const char *nombreArchivo, const void *registro);
-int leerPuntajes(const char *nombreArchivo, void *registros, int maxRegistros);
+int leerArchivoTxt(FILE* arch, void *estDatos, unsigned tam, unsigned tamLinea, accion Accion);
+int leerArchivoBin(FILE* arch, void *estDatos, unsigned tam, accion Accion);
 
 int buscarRegistro(FILE* arch, void *reg,const void *dato, unsigned tam, cmp Cmp);
 int leerPos(FILE* arch, void *dato, unsigned tam, int pos);
@@ -40,6 +35,7 @@ int escribirPos(FILE* arch,const void *dato, unsigned tam, int pos);
 int actualizarRegistro(FILE* arch, void *reg, const void *dato, unsigned tam, accion Accion);
 
 int escribirTxt(FILE *arch, void *dato, unsigned tamLinea, accion Accion);
+int escribirNuevoReg(FILE *arch, void *dato, unsigned tam);
 
 
 #endif // ARCHIVOS_H

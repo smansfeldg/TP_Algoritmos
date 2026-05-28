@@ -6,6 +6,7 @@
 #include <string.h>
 #include "lista_circular.h"
 #include "cola.h"
+#include "archivos.h"
 
 #define MAX_NOMBRE 50
 #define MAX_JUGADORES 100
@@ -84,7 +85,7 @@ typedef struct {
 
 typedef struct {
     int idPartida;
-    char nombre[MAX_NOMBRE];
+    int idJugador;
     int puntuacion;
     int cantidadMovimientos;
 } tRegistroPartida;
@@ -96,14 +97,15 @@ typedef struct{
 
 typedef struct{
   int idJugador;
+  int nombre[MAX_NOMBRE];
   int cantidadPartidas;
   int puntuacionTotal;
 } tRegistroRanking;
 
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas);
 void crearBandido(tBandido *b, int id, int posicion);
-void inicializarConfiguracion(tConfiguracion *cfg);
 int cargarConfiguracion(const char *archivo, tConfiguracion *cfg);
+void trozarConfig(void *config, const void *dato);
 void mostrarConfiguracion(const tConfiguracion *cfg);
 int generarTablero(tLista *tablero, const tConfiguracion *cfg);
 void mostrarTablero(const tLista *tablero);
@@ -123,5 +125,12 @@ int verificarDerrota(const tJugador *j);
 void guardarCaravana(const char *archivo, const tJuego *juego);
 int cargarCaravana(const char *archivo, tJuego *juego);
 int posicionarJugador(tJuego *juego, int posicion);
+
+int crearRanking(tLista *ranking, FILE* arch);
+void cargarRanking(void *ranking, const void *dato);
+int cmpPuntos(const void *a, const void *b);
+int actualizarRegistroPartidas(FILE* arch, tLista *ranking, tRegistroPartida partida);
+void mostrarListaRanking(tLista *ranking);
+void mostrarRanking(const void *ranking);
 
 #endif

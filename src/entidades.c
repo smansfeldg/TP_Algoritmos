@@ -22,28 +22,45 @@ void crearBandido(tBandido *b, int id, int posicion)
     b->activo = 1;
 }
 
-//HACER
+//Listo
 int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
-{ // Totalmente provisoria, @Matias-Esp tenia que hacerlo, por ahora esto para probar. 
-    FILE *f = fopen(archivo, "rt");
-    if (!f) return 0;
+{
+    FILE* arch;
+    abrirArchivo(&arch,archivo,"rt",0);
 
-    char clave[50];
-    int valor;
+    leerArchivoTxt(arch, cfg, sizeof(tConfiguracion), sizeof(char)*51, trozarConfig);
 
-    while (fscanf(f, "%s %d", clave, &valor) == 2)
-    {
-        if (strcmp(clave, "TOTAL_CASILLAS") == 0) cfg->totalCasillas = valor;
-        else if (strcmp(clave, "VIDAS_INICIALES") == 0) cfg->vidasIniciales = valor;
-        else if (strcmp(clave, "CANTIDAD_BANDIDOS") == 0) cfg->cantidadBandidos = valor;
-        else if (strcmp(clave, "CANTIDAD_PREMIOS") == 0) cfg->cantidadPremios = valor;
-        else if (strcmp(clave, "CANTIDAD_VIDAS") == 0) cfg->cantidadVidas = valor;
-        else if (strcmp(clave, "CANTIDAD_OASIS") == 0) cfg->cantidadOasis = valor;
-        else if (strcmp(clave, "CANTIDAD_TORMENTAS") == 0) cfg->cantidadTormentas = valor;
-    }
-
-    fclose(f);
+    fclose(arch);
     return 1;
+}
+void trozarConfig(void *config, const void *dato)
+{
+    char *linea =(char*) dato;
+    tConfiguracion *c = (tConfiguracion*) config;
+    char parametro[50];
+    int valor;
+    sscanf(linea," %26[^: ] %*[: ] %d",parametro,&valor);
+
+    if(strcmpi(parametro,"TOTAL_CASILLAS")==0)
+        c->totalCasillas=valor;
+
+    else if(strcmpi(parametro,"VIDAS_INICIALES")==0)
+        c->vidasIniciales=valor;
+
+    else if(strcmpi(parametro,"CANTIDAD_BANDIDOS")==0)
+        c->cantidadBandidos=valor;
+
+    else if(strcmpi(parametro,"CANTIDAD_PREMIOS")==0)
+        c->cantidadPremios=valor;
+
+    else if(strcmpi(parametro,"CANTIDAD_VIDAS")==0)
+        c->cantidadVidas=valor;
+
+    else if(strcmpi(parametro,"CANTIDAD_OASIS")==0)
+        c->cantidadOasis=valor;
+
+    else if(strcmpi(parametro,"CANTIDAD_TORMENTAS")==0)
+        c->cantidadTormentas=valor;
 }
 
 //LISTO
@@ -342,3 +359,62 @@ int posicionarJugador(tJuego *juego, int posicion){
 }
 
 //ADEMAS DEBERIA HABER UN PAR DE FUNCIONES PARA GUARDAR Y CARGAR JUGADORES, OTRO PAR PARA LAS PARTIDAS Y OTRO PAR PARA EL INDICE
+
+int crearRanking(tLista *ranking, FILE* arch)
+{
+    crearLista(ranking);
+    leerArchivoBin(arch,ranking,sizeof(tRegistroRanking),cargarRanking);
+    //Agregar Funcion que recorra la lista, y segun el id agregue el nombre del jugador
+    ordenarLista(ranking, cmpPuntos);
+
+    return 1;
+}
+
+void cargarRanking(void *ranking, const void *dato)
+{
+    tRegistroPartida *partida=(tRegistroPartida*)dato;
+    tRegistroRanking reg;
+
+    reg.idJugador=partida->idJugador;
+    reg.nombre[0]='\n';
+    reg.cantidadPartidas=1;
+    reg.puntuacionTotal=partida->puntuacion;
+    //Cambiar a insertar con duplicado
+    insertarAlFinal(ranking,&reg,sizeof(tRegistroRanking));
+}
+int cmpPuntos(const void *a, const void *b)
+{
+    tRegistroRanking *reg1=(tRegistroRanking*)a;
+    tRegistroRanking *reg2=(tRegistroRanking*)b;
+
+    return (reg1->puntuacionTotal)-(reg2->puntuacionTotal);
+}
+
+int actualizarRegistroPartidas(FILE* arch, tLista *ranking, tRegistroPartida partida)
+{
+    escribirNuevoReg(arch,&partida,sizeof(tRegistroPartida));
+
+    tRegistroRanking nuevo;
+
+    nuevo.idJugador=partida.idJugador;
+    //Buscar nombre del jugador a traves del Indice a partir de su ID
+    nuevo.nombre[0]='\n';
+    nuevo.cantidadPartidas=1;
+    nuevo.puntuacionTotal=partida.puntuacion;
+    //Cambiar a insertar con duplicado
+    insertarAlFinal(ranking,&nuevo,sizeof(tRegistroRanking));
+
+    return 1;
+}
+void mostrarListaRanking(tLista *ranking)
+{
+    printf("\nRANKING DE JUGADORES:\n");
+    printf("---\n");
+    mostrarDeIzqADer(ranking, mostrarRanking);
+    printf("\n---");
+}
+void mostrarRanking(const void *reg)
+{
+    tRegistroRanking *ranking=(tRegistroRanking*)reg;
+    printf("%s  |  Puntos: %d  | Cantidad de Partidas: %d",ranking->nombre,ranking->puntuacionTotal,ranking->cantidadPartidas);
+}
