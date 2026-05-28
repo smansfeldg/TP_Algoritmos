@@ -122,7 +122,6 @@ int mostrarDeIzqADer(const tLista *p,
     if(!*p)
         return 0;
 
-    mostrar(NULL);
     tNodoListaC *act = *p;
     do
     {
@@ -141,7 +140,6 @@ int mostrarDeDerAIzq(const tLista *p,
     if(!*p)
         return 0;
 
-    mostrar(NULL);
     tNodoListaC *act = (*p)->ant; /* Comenzamos desde el último */
     do
     {
