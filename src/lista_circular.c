@@ -266,3 +266,20 @@ int eliminarPorClave(tLista *p, void *d, unsigned cantBytes,
 
     return 0;
 }
+
+int recorrerListaYAccionar(const tLista *p, void *contexto, void (*accion)(void *info, void *contexto))
+{
+    int cant = 0;
+    if(!*p)
+        return 0;
+
+    tNodoListaC *act = *p;
+    do
+    {
+        accion(act->info, contexto);
+        act = act->sig;
+        cant++;
+    } while(act != *p);
+    
+    return cant;
+}
