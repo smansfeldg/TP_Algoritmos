@@ -69,7 +69,10 @@ void test_verificar_colision_positiva() {
     crearJugador(&j, "TestUser", 5, 3);
     crearBandido(&b, 1, 5); // Misma posición
     
-    int choque = verificarColision(&j, &b);
+    tJuego juego;
+    crearLista(&juego.bandidos);
+    juego.jugador = j;
+    int choque = verificarColision(&juego, &b);
     assert(choque == 1);
     printf("[OK] test_verificar_colision_positiva\n");
 }
@@ -81,7 +84,10 @@ void test_verificar_colision_negativa() {
     crearJugador(&j, "TestUser", 5, 3);
     crearBandido(&b, 1, 6); // Posición distinta
     
-    int choque = verificarColision(&j, &b);
+    tJuego juego;
+    crearLista(&juego.bandidos);
+    juego.jugador = j;
+    int choque = verificarColision(&juego, &b);
     assert(choque == 0);
     printf("[OK] test_verificar_colision_negativa\n");
 }
