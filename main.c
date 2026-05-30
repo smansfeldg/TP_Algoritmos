@@ -51,8 +51,11 @@ void jugar(){
     //HACER FUNCION PARA CARGAR INDICE
     //CARGAR INDICE
 
-    cargarConfiguracion("config.txt", &cfg);
-    mostrarConfiguracion(&cfg);
+    if (!cargarConfiguracion("config.txt", &cfg)) {
+        printf("No se pudo cargar config.txt. Revise que el archivo exista.\n");
+        pausar_consola();
+        return;
+    }
 
     inicializarJuego(&juego, &cfg);
     iniciarPartida(&juego);
@@ -67,23 +70,24 @@ void jugar(){
     mostrarTableroConPosiciones(&juego);
 
     while (juego.juegoActivo) {
-        printf("\nContinuar...");
-        pausar_consola();
         limpiar_pantalla();
+        mostrarTableroConPosiciones(&juego);
 
         resultado = ejecutarTurno(&juego);
-        pausar_consola();
 
         mostrarTableroConPosiciones(&juego);
 
-        //REEMPLAZAR POR MOSTRAR FIN JUEGO
         if (resultado == 2) {
-            printf("\n*** HAS GANADO! ***\n");
+            mostrarFinJuego(1, &juego.jugador);
             juego.juegoActivo = 0;//PUESTO PROVISORIAMENTE, DEBE IR EN VERIFICAR DERROTA Y VICTORIA
         }
         if (resultado == 0) {
-            printf("\n*** HAS PERDIDO ***\n");
+            mostrarFinJuego(0, &juego.jugador);
             juego.juegoActivo = 0;//PUESTO PROVISORIAMENTE, DEBE IR EN VERIFICAR DERROTA Y VICTORIA
+        }
+
+        if (juego.juegoActivo) {
+            pausar_consola();
         }
     }
 
