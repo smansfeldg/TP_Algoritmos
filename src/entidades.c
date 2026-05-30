@@ -154,8 +154,18 @@ void mostrarTablero(const tLista *tablero)
 //ESTA FUNCION DEBERIA RECIBIR UNA FUNCION DE COMPARACION DE PARA POSICION DE CASILLAS
 tCasilla* buscarCasilla(const tLista *tablero, int posicion)
 {
-    //DEBERIA LLAMAR LA FUNCION DE BUSQUEDA CON LA FUNCION DE BUSQUEDA DE POSICION DE CASILLA
-    return 0;
+    // Implementar esta funcion dentro de las primitivas de lista circular, con una funcion de comparacion, pero por ahora esto para probar
+    if(!*tablero) return NULL;
+
+    tNodoListaC *act = *tablero;
+    do {
+        tCasilla *c = (tCasilla *)act->info;
+        if(c->posicion == posicion)
+            return c;
+        act = act->sig;
+    } while(act != *tablero);
+
+    return NULL;
 }
 
 //LISTA
@@ -328,6 +338,8 @@ int posicionarJugador(tJuego *juego, int posicion){
 
   juego->jugador.posicion=posicion;
 
+  if(!juego->bandidos) return 1;
+
   //GUARDAR EL PRIMER BANDIDO
   bandidoIni = juego->bandidos;
   bandidoActual = bandidoIni;
@@ -335,8 +347,8 @@ int posicionarJugador(tJuego *juego, int posicion){
     if(verificarColision(juego, bandidoActual->info)){
       break;
     }
-    bandidoActual = juego->bandidos->sig;
-  }while( ((tBandido*)(bandidoActual->info))->id != ((tBandido*)(bandidoIni->info))->id);
+    bandidoActual = bandidoActual->sig;
+  }while(bandidoActual != bandidoIni);
 
   return 1;
 }
