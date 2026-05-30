@@ -118,50 +118,40 @@ int procesarMovimientoJugador(tJuego *juego){
   return 1;
 }
 
-//LISTA/VERIFICAR
-int procesarMovimientoBandidos(tJuego *juego){
-  tLista* listaBandidos; //SI SE UTILIZA UNA FUNCION RECORRER LISTA ESTO NO VA
-  tBandido* bandidoActual; //SI SE UTILIZA UNA FUNCION RECORRER LISTA ESTO NO VA
-  listaBandidos = &juego->bandidos; //SI SE UTILIZA UNA FUNCION RECORRER LISTA ESTO NO VA
+void accionarBandido(void *info, void *contexto) {
+  tBandido* bandidoActual = (tBandido*)info;
+  tJuego* juego = (tJuego*)contexto;
   tMovimiento nueMov;
-  int posJugador;
-  posJugador = juego->jugador.posicion;
+  
+  if(!bandidoActual->activo) return;
 
-//REEMPLAZAR POR UNA FUNCION DE RECORRER LISTA
-//  while(obtenerYAvanzarLista(listaBandidos, bandidoActual)){
-    nueMov.pasos=lanzarDado();
-    nueMov.entidad=bandidoActual;
-    //HACER FUNCION
-    //SI POSJUGADOR < POSBANDIDO
-    if(posJugador < bandidoActual->posicion) {
-      // SI (TOTAL CASILLAS + POSJUGADOR) - POSBANDIDO < POSBANDIDO - POSJUGADOR
-      //  AVANZAR
-      // SINO
-      //  RETROCEDER
-      if( ((juego->config.totalCasillas+posJugador)-bandidoActual->posicion) < (bandidoActual->posicion-posJugador) ){
-        nueMov.direccion = 'F';
-      }
-      else{
-        nueMov.direccion = 'B';
-      }
+  int posJugador = juego->jugador.posicion;
+  nueMov.pasos = lanzarDado();
+  nueMov.entidad = bandidoActual;
+
+  if(posJugador < bandidoActual->posicion) {
+    if( ((juego->config.totalCasillas + posJugador) - bandidoActual->posicion) < (bandidoActual->posicion - posJugador) ){
+      nueMov.direccion = 'F';
     }
     else{
-      //SINO
-      // SI (TOTAL CASILLAS + POSBANDIDO) - POSJUGADOR < POSJUGADOR - POSBANDIDO
-      //  RETROCEDER
-      // SINO
-      //  AVANZAR
-      if( ((juego->config.totalCasillas+bandidoActual->posicion)-posJugador) < (posJugador-bandidoActual->posicion) ){
-        nueMov.direccion = 'B';
-      }
-      else{
-        nueMov.direccion = 'F';
-      }
+      nueMov.direccion = 'B';
     }
+  }
+  else{
+    if( ((juego->config.totalCasillas + bandidoActual->posicion) - posJugador) < (posJugador - bandidoActual->posicion) ){
+      nueMov.direccion = 'B';
+    }
+    else{
+      nueMov.direccion = 'F';
+    }
+  }
 
-    encolarMovimiento(&juego->colaMovimientos,nueMov);
-//  }
+  encolarMovimiento(&juego->colaMovimientos, nueMov);
+}
 
+//LISTA/VERIFICAR
+int procesarMovimientoBandidos(tJuego *juego){
+  recorrerListaYAccionar(&juego->bandidos, juego, accionarBandido);
   return 1;
 }
 
