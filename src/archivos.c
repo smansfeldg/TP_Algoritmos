@@ -55,6 +55,8 @@ int leerArchivoTxt(FILE* arch, void *estDatos, unsigned tam, unsigned tamLinea, 
         Accion(aux, linea);
     }
 
+    memcpy(estDatos,aux,tam);
+
     free(linea);
     free(aux);
     return OK;

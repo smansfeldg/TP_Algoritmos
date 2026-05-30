@@ -33,8 +33,8 @@ int listaVacia(const tLista *p);
 int listaLlena(const tLista *p, unsigned cantBytes);
 int insertarAlFinal(tLista *p, const void *d, unsigned cantBytes);
 int insertarAlComienzo(tLista *p, const void *d, unsigned cantBytes);
-int mostrarDeIzqADer(const tLista *p,
-                      void (*mostrar)(const void *));
+int mostrarDeIzqADer(const tLista *p, void* param,
+                      void (*mostrar)(const void*, void *));
 int mostrarDeDerAIzq(const tLista *p,
                       void (*mostrar)(const void *));
 int insertarEnOrden(tLista *p, const void *d, unsigned cantBytes,
@@ -44,6 +44,7 @@ int insertarEnOrden(tLista *p, const void *d, unsigned cantBytes,
 void ordenarLista(tLista *p, int (*comparar)(const void *, const void *));
 int eliminarPorClave(tLista *p, void *d, unsigned cantBytes,
                      int (*comparar)(const void *, const void *));
-int recorrerListaYAccionar(const tLista *p, void *contexto, void (*accion)(void *info, void *contexto));
+int recorrerListaYAccionar(tLista *p, void *contexto, void (*accion)(void *info, void *contexto));
+int buscarElementoLista(const tLista *p, void **dato, void* aBuscar, int (*cmp)(const void*, const void*));
 
 #endif // LISTA_CIRCULAR_H

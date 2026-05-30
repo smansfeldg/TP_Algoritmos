@@ -21,22 +21,28 @@ SINO HACER UNA FUNCION PARA RECORRER LA LISTA CIRCULAR Y QUE RECIBA UN PARAMETRO
 DE SER ASI EL CONTENIDO DEL WHILE DE "PROCESARMOVIMIENTOBANDIDOS" DEBE SER LA FUNCIÓN QUE SE PASE COMO ARGUMENTO Y
 SE DEBERA AJUSTAR PARA ESO MISMO
 */
-typedef enum {
-    TIPO_NORMAL = '.',
-    TIPO_INICIO = 'I',
-    TIPO_REFUGIO = 'S',
-    TIPO_PREMIO = 'P',
-    TIPO_VIDA = 'V',
-    TIPO_OASIS = 'O',
-    TIPO_TORMENTA = 'T',
-    TIPO_BANDIDO = 'B',
-    TIPO_JUGADOR = 'J'
-} tTipoCasilla;
+
+#define TIPO_NORMAL   '.'
+#define TIPO_INICIO   'I'
+#define TIPO_REFUGIO  'S'
+#define TIPO_PREMIO   'P'
+#define TIPO_VIDA     'V'
+#define TIPO_OASIS    'O'
+#define TIPO_TORMENTA 'T'
+#define TIPO_BANDIDO  'B'
+#define TIPO_JUGADOR  'J'
 
 typedef struct {
     int posicion;
-    char tipo;
-    char descripcion[50];
+    unsigned normal;
+    unsigned inicio;
+    unsigned refugio;
+    unsigned premios;
+    unsigned vidas;
+    unsigned oasis;
+    unsigned tormenta;
+    unsigned jugador;
+    unsigned bandidos;
 } tCasilla;
 
 typedef struct {
@@ -97,7 +103,7 @@ typedef struct{
 
 typedef struct{
   int idJugador;
-  int nombre[MAX_NOMBRE];
+  char nombre[MAX_NOMBRE];
   int cantidadPartidas;
   int puntuacionTotal;
 } tRegistroRanking;
@@ -107,30 +113,28 @@ void crearBandido(tBandido *b, int id, int posicion);
 int cargarConfiguracion(const char *archivo, tConfiguracion *cfg);
 void trozarConfig(void *config, const void *dato);
 void mostrarConfiguracion(const tConfiguracion *cfg);
-int generarTablero(tLista *tablero, const tConfiguracion *cfg);
-void mostrarTablero(const tLista *tablero);
-tCasilla* buscarCasilla(const tLista *tablero, int posicion);
-int moverJugador(tJuego* juego, tMovimiento movimiento);
-void aplicarEfectoCasilla(tJugador *j, char tipoCasilla);
-void mostrarEstadoJugador(const tJugador *j);
+int generarTablero(tJuego *juego, const tConfiguracion *cfg);
+tCasilla* buscarCasilla(const tLista *tablero, int posicion, int (*cmp)(const void*, const void*));
+int moverJugador(tJuego* juego, tMovimiento movimiento, tCasilla* Casilla);
+int aplicarEfectoCasilla(tJugador *j, tCasilla* Casilla);
 void inicializarJuego(tJuego *juego, tConfiguracion *cfg);
 void liberarJuego(tJuego *juego);
 int encolarMovimiento(tCola *cola, tMovimiento mov);
 int desencolarMovimiento(tCola *cola, tMovimiento *mov);
 void mostrarColaMovimientos(tCola *cola);
-int moverBandido(tJuego* juego,tBandido *b,tMovimiento movimiento);
-int verificarColision(tJuego *juego, tBandido *b);
-int verificarVictoria(const tJugador *j, const tLista *tablero);
+int moverBandido(tJuego* juego,tBandido *b,tMovimiento movimiento, tCasilla* Casilla);
+int verificarColision(tJuego *juego, tBandido *b, tCasilla* Casilla);
 int verificarDerrota(const tJugador *j);
 void guardarCaravana(const char *archivo, const tJuego *juego);
 int cargarCaravana(const char *archivo, tJuego *juego);
 int posicionarJugador(tJuego *juego, int posicion);
+int cmpPosCasillas(const void *a, const void *b);
 
 int crearRanking(tLista *ranking, FILE* arch);
 void cargarRanking(void *ranking, const void *dato);
 int cmpPuntos(const void *a, const void *b);
 int actualizarRegistroPartidas(FILE* arch, tLista *ranking, tRegistroPartida partida);
 void mostrarListaRanking(tLista *ranking);
-void mostrarRanking(const void *ranking);
+void mostrarRanking(const void *ranking, void* param);
 
 #endif

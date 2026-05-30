@@ -2,6 +2,12 @@
 #include <time.h>
 #include <ctype.h>
 
+#ifndef _WIN32
+      int strcmpi(const char* c1, const char* c2){
+        return strcasecmp(c1, c2);
+      }
+#endif
+
 //LISTO
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas)
 {
@@ -33,13 +39,17 @@ int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
     fclose(arch);
     return 1;
 }
+
+//Listo
 void trozarConfig(void *config, const void *dato)
 {
     char *linea =(char*) dato;
     tConfiguracion *c = (tConfiguracion*) config;
     char parametro[50];
     int valor;
-    sscanf(linea," %26[^: ] %*[: ] %d",parametro,&valor);
+    sscanf(linea," %49[^: ] %*[: ] %d",parametro,&valor);
+
+
 
     if(strcmpi(parametro,"TOTAL_CASILLAS")==0)
         c->totalCasillas=valor;
@@ -65,15 +75,15 @@ void trozarConfig(void *config, const void *dato)
 
 //LISTO
 void mostrarConfiguracion(const tConfiguracion *cfg){
-  printf("Los parametros de configuracion son:\nCantidad de Casillas del Tablero:\t%d\nCantidad de Oasis:\t%d\nCantidad de Premios:\t%d\nCantidad de Tormentas:\t%d\nCantidad de Vidas Extra:\t%d\nCantidad de Vida Inicial:\t%d\nCantidad de Bandidos:\t%d\n",
+  printf("Los parametros de configuracion son:\nCantidad de Casillas del Tablero: %d\nCantidad de Oasis:\t\t  %d\nCantidad de Premios:\t\t  %d\nCantidad de Tormentas:\t\t  %d\nCantidad de Vidas Extra:\t  %d\nCantidad de Vida Inicial:\t  %d\nCantidad de Bandidos:\t\t  %d\n",
          cfg->totalCasillas,cfg->cantidadOasis,cfg->cantidadPremios,cfg->cantidadTormentas,cfg->cantidadVidas,cfg->vidasIniciales,cfg->cantidadBandidos);
 }
 
-// Ah debatir, pero esta logica provicional funciona
-int generarTablero(tLista *tablero, const tConfiguracion *cfg)
-{
+//Listo
+int generarTablero(tJuego *juego, const tConfiguracion *cfg){
+    tBandido bandidoAux;
     int i;
-    int sumaEspeciales = cfg->cantidadOasis + cfg->cantidadPremios + cfg->cantidadTormentas + cfg->cantidadVidas;
+    int sumaEspeciales = cfg->cantidadOasis + cfg->cantidadTormentas;
 
     if (sumaEspeciales > cfg->totalCasillas - 2) {
         return 0; // No se puede generar, demasiadas casillas especiales
@@ -83,25 +93,32 @@ int generarTablero(tLista *tablero, const tConfiguracion *cfg)
     if (!casillas) return 0;
 
     // Inicializar todo como normal
-    for(i = 0; i < cfg->totalCasillas; i++)
-    {
-        casillas[i].posicion = i;
-        casillas[i].tipo = TIPO_NORMAL;
-        strcpy(casillas[i].descripcion, "Casilla Normal");
+    for(i = 0; i < cfg->totalCasillas; i++){
+        casillas[i].posicion = i+1;
+        casillas[i].normal = 1;
+        casillas[i].bandidos = 0;
+        casillas[i].inicio = 0;
+        casillas[i].jugador = 0;
+        casillas[i].oasis = 0;
+        casillas[i].premios = 0;
+        casillas[i].refugio = 0;
+        casillas[i].tormenta = 0;
+        casillas[i].vidas = 0;
     }
 
-    casillas[0].tipo = TIPO_INICIO;
-    strcpy(casillas[0].descripcion, "Inicio");
-    
+    casillas[0].inicio = 1;
+    casillas[0].normal = 0;
+    casillas[0].jugador = 1;
+
     // Asignar especiales aleatoriamente
     int c;
-    
+
     c = 0;
     while(c < cfg->cantidadOasis) {
         int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
-        if(casillas[pos].tipo == TIPO_NORMAL) {
-            casillas[pos].tipo = TIPO_OASIS;
-            strcpy(casillas[pos].descripcion, "Oasis");
+        if(casillas[pos].normal){
+            casillas[pos].normal = 0;
+            casillas[pos].oasis  = 1;
             c++;
         }
     }
@@ -109,19 +126,17 @@ int generarTablero(tLista *tablero, const tConfiguracion *cfg)
     c = 0;
     while(c < cfg->cantidadPremios) {
         int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
-        if(casillas[pos].tipo == TIPO_NORMAL) {
-            casillas[pos].tipo = TIPO_PREMIO;
-            strcpy(casillas[pos].descripcion, "Premio");
-            c++;
-        }
+        casillas[pos].normal = 0;
+        casillas[pos].premios++;
+        c++;
     }
 
     c = 0;
     while(c < cfg->cantidadTormentas) {
         int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
-        if(casillas[pos].tipo == TIPO_NORMAL) {
-            casillas[pos].tipo = TIPO_TORMENTA;
-            strcpy(casillas[pos].descripcion, "Tormenta");
+        if(casillas[pos].normal) {
+            casillas[pos].normal = 0;
+            casillas[pos].tormenta = 1;
             c++;
         }
     }
@@ -129,106 +144,107 @@ int generarTablero(tLista *tablero, const tConfiguracion *cfg)
     c = 0;
     while(c < cfg->cantidadVidas) {
         int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
-        if(casillas[pos].tipo == TIPO_NORMAL) {
-            casillas[pos].tipo = TIPO_VIDA;
-            strcpy(casillas[pos].descripcion, "Vida Extra");
-            c++;
-        }
+        casillas[pos].normal = 0;
+        casillas[pos].vidas++;
+        c++;
     }
-    
-    // El ultimo nodo podría ser el refugio? El TP no lo especifica claro, asignemos al final.
-    casillas[cfg->totalCasillas - 1].tipo = TIPO_REFUGIO;
-    strcpy(casillas[cfg->totalCasillas - 1].descripcion, "Refugio / Fin");
+
+    c = 0;
+    while(c < cfg->cantidadBandidos) {
+        int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
+        casillas[pos].normal = 0;
+        casillas[pos].bandidos++;
+        crearBandido(&bandidoAux,c,pos+1);
+
+        insertarAlComienzo(&juego->bandidos,&bandidoAux,sizeof(tBandido));
+        c++;
+    }
+
+
+    // El ultimo nodo debe ser el refugio
+    casillas[cfg->totalCasillas - 1].refugio = 1;
+    casillas[cfg->totalCasillas - 1].normal = 0;
 
     // Insertar en la lista
-    for(i = 0; i < cfg->totalCasillas; i++)
-    {
-        insertarAlFinal(tablero, &casillas[i], sizeof(tCasilla));
+    for(i = 0; i < cfg->totalCasillas; i++){
+        insertarAlFinal(&juego->tablero, &casillas[i], sizeof(tCasilla));
     }
-    
+
     free(casillas);
     return 1;
 }
 
-// Helper para mostrarCasilla
-void mostrarCasilla(const void *info)
-{
-    if (!info) return;
-    tCasilla *casilla = (tCasilla *)info;
-    printf("[%c]", casilla->tipo);
-}
+//LISTO
+tCasilla* buscarCasilla(const tLista *tablero, int posicion, int (*cmp)(const void*, const void*)){
+    tCasilla *ret=NULL, aBuscar;
+    aBuscar.posicion = posicion;
 
-//EN DEBATE
-void mostrarTablero(const tLista *tablero)
-{
-    printf("\nTablero: ");
-    mostrarDeIzqADer(tablero, mostrarCasilla);
-    printf("\n");
-}
-
-//HACER
-//DEBERIA HABER UNA FUNCIÓN PARA BUSCAR EN LA IMPLEMENTACION DE LISTA CIRCULAR
-//ESTA FUNCION DEBERIA RECIBIR UNA FUNCION DE COMPARACION DE PARA POSICION DE CASILLAS
-tCasilla* buscarCasilla(const tLista *tablero, int posicion)
-{
-    //DEBERIA LLAMAR LA FUNCION DE BUSQUEDA CON LA FUNCION DE BUSQUEDA DE POSICION DE CASILLA
-    return 0;
+    buscarElementoLista(tablero, (void**)(&ret), &aBuscar, cmp);
+    return ret;
 }
 
 //LISTA
-int moverJugador(tJuego* juego, tMovimiento movimiento){
+//DEVUELVE 1 SI MOVIO SIN PROBLEMAS Y 0 SI EL JUGADOR PERDIO
+int moverJugador(tJuego* juego, tMovimiento movimiento, tCasilla* casillaActual){
     int nuevaPos, sentido;
 
     if(movimiento.direccion == 'F'){
       sentido = 1;
+      printf("El jugador se movio %d casillas hacia adelante\n", movimiento.pasos);
     }
     else if(movimiento.direccion == 'B'){
       sentido = -1;
+      printf("El jugador se movio %d casillas hacia atrás\n", movimiento.pasos);
     }
 
     nuevaPos = juego->jugador.posicion + movimiento.pasos*sentido;
+
+    //ANTES DE ABANDONAR LA CASILLA CASILLA->JUGADOR = 0;
+    casillaActual->jugador = 0;
 
     if(nuevaPos > juego->config.totalCasillas){
       nuevaPos = juego->config.totalCasillas - (nuevaPos%juego->config.totalCasillas);
     }
 
-    posicionarJugador(juego, nuevaPos);
-
-    return nuevaPos;
+    return posicionarJugador(juego, nuevaPos);
 }
 
 //LISTA PERO REVISAR SI SE PUEDE USAR PARA VERIFICAR VICTORIA
-void aplicarEfectoCasilla(tJugador *j, char tipoCasilla)
-{
-    switch (tipoCasilla)
-    {
-    case TIPO_PREMIO:
-        j->puntos += 10;
-        break;
-    case TIPO_VIDA:
-        j->vidas += 1;
-        break;
-    case TIPO_OASIS:
+int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla){
+    //CONDICION DE VICTORIA
+    if(casilla->refugio){
+      return 1;
+    }
+
+    if(!casilla->normal){
+      if(casilla->oasis){
         j->protegidoOasis = 1;
-        break;
-    case TIPO_TORMENTA:
-        if (j->protegidoOasis) {
+        puts("El jugador descansa en un oasis y estara protegido hasta su proximo turno");
+        casilla->oasis = 0;
+      }
+      if(casilla->tormenta){
+        if(j->protegidoOasis){
             j->protegidoOasis = 0;
-        } else {
+            puts("¡El jugador fue protegido de la tormenta por el poder del Oasis!");
+        }
+        else{
+            puts("El jugador pierde el proximo turno debido a una tormenta de arena que no lo deja avanzar");
             j->perdidoTurno = 1;
         }
-        break;
+        casilla->tormenta = 0;
+      }
+      if(casilla->vidas){
+        printf("El jugador gano %d vidas\n",casilla->vidas);
+        j->vidas += casilla->vidas;
+        casilla->vidas = 0;
+      }
+      if(casilla->premios){
+        printf("El jugador encontró %d premios\n", casilla->premios);
+        j->puntos += 10 * casilla->premios;
+        casilla->premios = 0;
+      }
     }
-}
-
-//LISTO
-void mostrarEstadoJugador(const tJugador *j){
-  if(j->perdidoTurno){
-    puts("EL JUGADOR PIERDE EL PROXIMO TURNO POR UNA TORMENTA DE ARENA");
-  }
-  if(j->protegidoOasis){
-    puts("EL JUGADOR DESCANSA EN UN OASIS Y ESTARA PROTEGIDO HASTA EL PROXIMO TURNO");
-  }
+    return 0;
 }
 
 //HACER
@@ -242,7 +258,7 @@ void inicializarJuego(tJuego *juego, tConfiguracion *cfg){
   juego->juegoActivo=1;
   juego->turnoActual=1;
 
-  generarTablero(&juego->tablero,cfg);
+  generarTablero(juego,cfg);
 }
 
 //HACER
@@ -251,14 +267,14 @@ void liberarJuego(tJuego *juego)
   //LO QUE DICE EL NOMBRE
 }
 
-//HACER
+//LISTO
 int encolarMovimiento(tCola *cola, tMovimiento movimiento){
   return PonerEnCola(cola,&movimiento,sizeof(tMovimiento));
 }
 
 //LISTO
 int desencolarMovimiento(tCola *cola, tMovimiento *mov){
-    return SacarDeCola(cola,mov,sizeof(tMovimiento)); //SacarDeCola
+  return SacarDeCola(cola,mov,sizeof(tMovimiento)); //SacarDeCola
 }
 
 //LISTO
@@ -273,7 +289,7 @@ void mostrarColaMovimientos(tCola *cola){
 }
 
 //LISTO
-int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento){
+int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *casillaActual){
     int nuevaPos, sentido;
 
     if(movimiento.direccion == 'F'){
@@ -285,45 +301,57 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento){
 
     nuevaPos = b->posicion + movimiento.pasos*sentido;
 
+    //ANTES DE ABANDONAR LA CASILLA CASILLA.BANDIDO--;
+    casillaActual->bandidos--;
+
     if(nuevaPos > juego->config.totalCasillas){
       nuevaPos = (nuevaPos%juego->config.totalCasillas);
     }
 
     if(nuevaPos < 1){
-      nuevaPos *= -1;
+      nuevaPos = juego->config.totalCasillas+nuevaPos;
     }
 
     b->posicion = nuevaPos;
 
-    verificarColision(juego, b);
-    return 1;
+    casillaActual = buscarCasilla(&juego->tablero,b->posicion,cmpPosCasillas);
+    //DESPUES DE LLEGAR A LA NUEVA CASILLA CASILLA->BANDIDO++;
+    casillaActual->bandidos++;
+    casillaActual->normal = 0;
+
+    return verificarColision(juego, b, casillaActual);
 }
 
 //LISTO
-int verificarColision(tJuego *juego, tBandido *b){
+//DEVUELVE 1 EN COLISION, 0 SI NO PASO NADA Y -1 Y EL JUGADOR PERDIO
+int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual){
     int colision;
 
     if( (colision = ((juego->jugador.posicion == b->posicion)) && b->activo)){
       b->activo = 0;
+      //DESPUES DE COLISIONAR CON JUGADOR CASILLA->BANDIDO--;
+      casillaActual->bandidos--;
+      puts("¡El jugador fue golpeado por un bandido!");
       if(!juego->jugador.protegidoOasis){
         juego->jugador.vidas -= 1;
+        if(juego->jugador.vidas==0){
+          return -1;
+        }
+        //DESPUES DE COLISIONAR CON JUGADOR CASILLA->JUGADOR = 0;
+        casillaActual->jugador = 0;
         posicionarJugador(juego, 1);
+      }
+      else{
+        puts("¡Pero fue protegido por el poder del Oasis!");
+        juego->jugador.protegidoOasis=0;
       }
     }
 
     return colision;
 }
 
-//REVISAR (EN ESPECIAL LOS PARAMETROS)
-int verificarVictoria(const tJugador *j, const tLista *tablero)
-{
-    //LO QUE DICE EL NOMBRE
-    return 0;
-}
-
 //LISTO
-int verificarDerrota(const tJugador *j)
-{
+int verificarDerrota(const tJugador *j){
     return (j->vidas <= 0);
 }
 
@@ -339,21 +367,32 @@ int cargarCaravana(const char *archivo, tJuego *juego)
     return 1;
 }
 
+void comprobarColisionesJB(void* bandido, void* contexto){
+  tBandido* bandidoActual = (tBandido*)bandido;
+  tJuego* juego = (tJuego*)contexto;
+  tCasilla *casillaActual = buscarCasilla(&juego->tablero,bandidoActual->posicion,cmpPosCasillas);
+
+  if(verificarColision(juego, bandidoActual, casillaActual)==-1){
+    juego->juegoActivo=0;
+  }
+}
+
 //LISTO
+//DEVUELVE 1 SI PUDO POSICIONAR Y 0 SI EL JUGADOR PERDIO
 int posicionarJugador(tJuego *juego, int posicion){
-  tNodoListaC *bandidoActual, *bandidoIni;
+  tCasilla *casillaActual;
 
   juego->jugador.posicion=posicion;
+  casillaActual = buscarCasilla(&juego->tablero,(juego->jugador).posicion,cmpPosCasillas);
+  //DESPUES DE POSICIONAR CASILLA->JUGADOR=1;
+  casillaActual->jugador = 1;
+  casillaActual->normal = 0;
 
-  //GUARDAR EL PRIMER BANDIDO
-  bandidoIni = juego->bandidos;
-  bandidoActual = bandidoIni;
-  do{//RECORRER LISTA BANDIDOS
-    if(verificarColision(juego, bandidoActual->info)){
-      break;
-    }
-    bandidoActual = juego->bandidos->sig;
-  }while( ((tBandido*)(bandidoActual->info))->id != ((tBandido*)(bandidoIni->info))->id);
+  recorrerListaYAccionar(&juego->bandidos, juego, comprobarColisionesJB);
+
+  if(!juego->juegoActivo){
+    return 0;
+  }
 
   return 1;
 }
@@ -382,12 +421,20 @@ void cargarRanking(void *ranking, const void *dato)
     //Cambiar a insertar con duplicado
     insertarAlFinal(ranking,&reg,sizeof(tRegistroRanking));
 }
+
 int cmpPuntos(const void *a, const void *b)
 {
     tRegistroRanking *reg1=(tRegistroRanking*)a;
     tRegistroRanking *reg2=(tRegistroRanking*)b;
 
     return (reg1->puntuacionTotal)-(reg2->puntuacionTotal);
+}
+
+int cmpPosCasillas(const void *a, const void *b){
+    tCasilla *cas1=(tCasilla*)a;
+    tCasilla *cas2=(tCasilla*)b;
+
+    return (cas1->posicion)-(cas2->posicion);
 }
 
 int actualizarRegistroPartidas(FILE* arch, tLista *ranking, tRegistroPartida partida)
@@ -410,11 +457,11 @@ void mostrarListaRanking(tLista *ranking)
 {
     printf("\nRANKING DE JUGADORES:\n");
     printf("---\n");
-    mostrarDeIzqADer(ranking, mostrarRanking);
+    mostrarDeIzqADer(ranking, NULL, mostrarRanking);
     printf("\n---");
 }
-void mostrarRanking(const void *reg)
+void mostrarRanking(const void *reg, void* param)
 {
     tRegistroRanking *ranking=(tRegistroRanking*)reg;
-    printf("%s  |  Puntos: %d  | Cantidad de Partidas: %d",ranking->nombre,ranking->puntuacionTotal,ranking->cantidadPartidas);
+    printf("%s\t|\tPuntos: %d\t|\tCantidad de Partidas: %d\n",ranking->nombre,ranking->puntuacionTotal,ranking->cantidadPartidas);
 }
