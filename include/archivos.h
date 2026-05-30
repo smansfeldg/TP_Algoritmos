@@ -32,6 +32,9 @@ int leerArchivoBin(FILE* arch, void *estDatos, unsigned tam, accion Accion, acci
 // Manejo de puntajes (registros)
 int guardarPuntaje(const char *nombreArchivo, const void *registro);
 int leerPuntajes(const char *nombreArchivo, void *registros, int maxRegistros);
+int obtenerORegistrarJugador(const char *archivoJugadores, const char *archivoIndice, tJugador *jugador);
+int guardarRegistroPartida(const char *nombreArchivo, const tRegistroPartida *registro);
+void mostrarRankingJugadores(const char *nombreArchivo);
 
 int buscarRegistro(FILE* arch, void *reg,const void *dato, unsigned tam, cmp Cmp);
 int leerPos(FILE* arch, void *dato, unsigned tam, int pos);

@@ -113,7 +113,7 @@ int cargarElementosOrdenadosArbolBin(ArbolBin *arbol, void *datos, int lim_izq, 
     return resultado;
   }
 
-  return cargarElementosOrdenadosArbolBin(&((*arbol)->nodoIzq),datos,medio+1,lim_der,params,leer);
+  return cargarElementosOrdenadosArbolBin(&((*arbol)->nodoDer),datos,medio+1,lim_der,params,leer);
 }
 
 void recorrerEnOrdenArbolBin(ArbolBin *arbol, unsigned nivel, void* params, void (*accion)(void* dato, size_t tam, unsigned nivel, void* params)){
@@ -223,8 +223,8 @@ NodoRaiz* mayorNodoArbolBin(const ArbolBin* arbol){
     return NULL;
   }
 
-  while((*arbol)->nodoIzq){
-    arbol = &(*arbol)->nodoIzq;
+  while((*arbol)->nodoDer){
+    arbol = &(*arbol)->nodoDer;
   }
 
   return (NodoRaiz*)(*arbol);
@@ -235,8 +235,8 @@ NodoRaiz* menorNodoArbolBin(const ArbolBin* arbol){
     return NULL;
   }
 
-  while((*arbol)->nodoDer){
-    arbol = &(*arbol)->nodoDer;
+  while((*arbol)->nodoIzq){
+    arbol = &(*arbol)->nodoIzq;
   }
 
   return (NodoRaiz*)(*arbol);
@@ -251,7 +251,7 @@ NodoRaiz** mayorSubArbolBin(const ArbolBin* arbol){
     arbol = &(*arbol)->nodoDer;
   }
 
-  return (NodoRaiz**)(*arbol);
+  return (NodoRaiz**)arbol;
 }
 
 NodoRaiz** menorSubArbolBin(const ArbolBin* arbol){
@@ -263,7 +263,7 @@ NodoRaiz** menorSubArbolBin(const ArbolBin* arbol){
     arbol = &(*arbol)->nodoIzq;
   }
 
-  return (NodoRaiz**)(*arbol);
+  return (NodoRaiz**)arbol;
 }
 
 unsigned alturaArbolBin(const ArbolBin* arbol){
@@ -272,8 +272,8 @@ unsigned alturaArbolBin(const ArbolBin* arbol){
     return 0;
   }
 
-  alturaDer = alturaArbolBin(arbol);
-  alturaIzq = alturaArbolBin(arbol);
+  alturaDer = alturaArbolBin(&(*arbol)->nodoDer);
+  alturaIzq = alturaArbolBin(&(*arbol)->nodoIzq);
 
   return 1 + (alturaDer>alturaIzq?alturaDer:alturaIzq);
 }
@@ -282,10 +282,14 @@ unsigned cantidadNodosArbolBin(const ArbolBin* arbol){
   if(!(*arbol)){
     return 0;
   }
-  return 1 + alturaArbolBin(&(*arbol)->nodoIzq) + alturaArbolBin(&(*arbol)->nodoDer);
+  return 1 + cantidadNodosArbolBin(&(*arbol)->nodoIzq) + cantidadNodosArbolBin(&(*arbol)->nodoDer);
 }
 
 void liberarArbolBin(ArbolBin *arbol){
+  if(!arbol || !(*arbol)){
+    return;
+  }
+
   if((*arbol)->nodoIzq != NULL){
     liberarArbolBin(&((*arbol)->nodoIzq));
   }
@@ -298,5 +302,6 @@ void liberarArbolBin(ArbolBin *arbol){
   if((*arbol) != NULL){
     free((*arbol));
   }
+  *arbol = NULL;
 
 }
