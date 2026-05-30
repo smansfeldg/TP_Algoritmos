@@ -64,13 +64,17 @@ void jugar(){
     printf("Objetivo: Llegar a la posicion %d (Refugio)\n", cfg.totalCasillas);
     pausar_consola();
 
+    mostrarTableroConPosiciones(&juego);
+
     while (juego.juegoActivo) {
         printf("\nContinuar...");
         pausar_consola();
         limpiar_pantalla();
-        mostrarTablero(&juego.tablero);
 
         resultado = ejecutarTurno(&juego);
+        pausar_consola();
+
+        mostrarTableroConPosiciones(&juego);
 
         //REEMPLAZAR POR MOSTRAR FIN JUEGO
         if (resultado == 2) {

@@ -93,6 +93,7 @@ int procesarMovimientoJugador(tJuego *juego){
   getc(stdin);
 
   nuevoMovimiento.pasos=lanzarDado();
+  printf("Dado: %d\n", nuevoMovimiento.pasos);
   nuevoMovimiento.entidad= &(juego->jugador);
   //LE PIDE AL JUGADOR QUE INGRESE UNO DE LOS CARACTERES DE MOVIMIENTO
   //HASTA QUE NO INGRESE UNO VALIDO LE SIGUE PIDIENDO
