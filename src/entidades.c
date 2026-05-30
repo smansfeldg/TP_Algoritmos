@@ -1,6 +1,28 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "../include/entidades.h"
 #include <time.h>
-#include <ctype.h>
+
+static int claveIgual(const char *clave, const char *esperada)
+{
+    return strcmp(clave, esperada) == 0;
+}
+
+static int posicionOcupadaPorBandido(const tLista *bandidos, int posicion)
+{
+    tNodoListaC *act;
+
+    if (!bandidos || !*bandidos) return 0;
+
+    act = *bandidos;
+    do {
+        tBandido *b = (tBandido *)act->info;
+        if (b->activo && b->posicion == posicion) return 1;
+        act = act->sig;
+    } while (act != *bandidos);
+
+    return 0;
+}
 
 //LISTO
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas)
@@ -22,28 +44,42 @@ void crearBandido(tBandido *b, int id, int posicion)
     b->activo = 1;
 }
 
-//HACER
+void inicializarConfiguracion(tConfiguracion *cfg)
+{
+    cfg->totalCasillas = 30;
+    cfg->vidasIniciales = 3;
+    cfg->cantidadBandidos = 3;
+    cfg->cantidadPremios = 4;
+    cfg->cantidadVidas = 2;
+    cfg->cantidadOasis = 2;
+    cfg->cantidadTormentas = 3;
+}
+
 int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
-{ // Totalmente provisoria, @Matias-Esp tenia que hacerlo, por ahora esto para probar. 
+{
     FILE *f = fopen(archivo, "rt");
     if (!f) return 0;
 
     char clave[50];
     int valor;
+    inicializarConfiguracion(cfg);
 
     while (fscanf(f, "%s %d", clave, &valor) == 2)
     {
-        if (strcmp(clave, "TOTAL_CASILLAS") == 0) cfg->totalCasillas = valor;
-        else if (strcmp(clave, "VIDAS_INICIALES") == 0) cfg->vidasIniciales = valor;
-        else if (strcmp(clave, "CANTIDAD_BANDIDOS") == 0) cfg->cantidadBandidos = valor;
-        else if (strcmp(clave, "CANTIDAD_PREMIOS") == 0) cfg->cantidadPremios = valor;
-        else if (strcmp(clave, "CANTIDAD_VIDAS") == 0) cfg->cantidadVidas = valor;
-        else if (strcmp(clave, "CANTIDAD_OASIS") == 0) cfg->cantidadOasis = valor;
-        else if (strcmp(clave, "CANTIDAD_TORMENTAS") == 0) cfg->cantidadTormentas = valor;
+        char *dosPuntos = strchr(clave, ':');
+        if (dosPuntos) *dosPuntos = '\0';
+
+        if (claveIgual(clave, "TOTAL_CASILLAS") || claveIgual(clave, "cantidad_posiciones")) cfg->totalCasillas = valor;
+        else if (claveIgual(clave, "VIDAS_INICIALES") || claveIgual(clave, "vidas_inicio")) cfg->vidasIniciales = valor;
+        else if (claveIgual(clave, "CANTIDAD_BANDIDOS") || claveIgual(clave, "maximo_bandidos")) cfg->cantidadBandidos = valor;
+        else if (claveIgual(clave, "CANTIDAD_PREMIOS") || claveIgual(clave, "maximo_premios")) cfg->cantidadPremios = valor;
+        else if (claveIgual(clave, "CANTIDAD_VIDAS") || claveIgual(clave, "maximo_vidas_extra")) cfg->cantidadVidas = valor;
+        else if (claveIgual(clave, "CANTIDAD_OASIS") || claveIgual(clave, "maximo_oasis")) cfg->cantidadOasis = valor;
+        else if (claveIgual(clave, "CANTIDAD_TORMENTAS") || claveIgual(clave, "maximo_tormentas")) cfg->cantidadTormentas = valor;
     }
 
     fclose(f);
-    return 1;
+    return cfg->totalCasillas >= 3 && cfg->vidasIniciales > 0;
 }
 
 //LISTO
@@ -149,7 +185,7 @@ void mostrarTablero(const tLista *tablero)
     printf("\n");
 }
 
-//HACER
+// Busca una casilla por posicion dentro de la lista circular del tablero.
 //DEBERIA HABER UNA FUNCIÓN PARA BUSCAR EN LA IMPLEMENTACION DE LISTA CIRCULAR
 //ESTA FUNCION DEBERIA RECIBIR UNA FUNCION DE COMPARACION DE PARA POSICION DE CASILLAS
 tCasilla* buscarCasilla(const tLista *tablero, int posicion)
@@ -170,7 +206,7 @@ tCasilla* buscarCasilla(const tLista *tablero, int posicion)
 
 //LISTA
 int moverJugador(tJuego* juego, tMovimiento movimiento){
-    int nuevaPos, sentido;
+    int nuevaPos, sentido = 1;
 
     if(movimiento.direccion == 'F'){
       sentido = 1;
@@ -181,8 +217,17 @@ int moverJugador(tJuego* juego, tMovimiento movimiento){
 
     nuevaPos = juego->jugador.posicion + movimiento.pasos*sentido;
 
-    if(nuevaPos > juego->config.totalCasillas){
-      nuevaPos = juego->config.totalCasillas - (nuevaPos%juego->config.totalCasillas);
+    /*
+     * El jugador no recorre la ruta como circulo: si sobrepasa el refugio,
+     * rebota con los pasos sobrantes para cumplir exactamente el valor del dado.
+     */
+    while(nuevaPos >= juego->config.totalCasillas || nuevaPos < 0){
+      if(nuevaPos >= juego->config.totalCasillas){
+        nuevaPos = (juego->config.totalCasillas - 1) - (nuevaPos - (juego->config.totalCasillas - 1));
+      }
+      if(nuevaPos < 0){
+        nuevaPos *= -1;
+      }
     }
 
     posicionarJugador(juego, nuevaPos);
@@ -190,13 +235,13 @@ int moverJugador(tJuego* juego, tMovimiento movimiento){
     return nuevaPos;
 }
 
-//LISTA PERO REVISAR SI SE PUEDE USAR PARA VERIFICAR VICTORIA
+// Aplica solo el efecto de la casilla destino, no las intermedias.
 void aplicarEfectoCasilla(tJugador *j, char tipoCasilla)
 {
     switch (tipoCasilla)
     {
     case TIPO_PREMIO:
-        j->puntos += 10;
+        j->puntos += 1;
         break;
     case TIPO_VIDA:
         j->vidas += 1;
@@ -224,8 +269,12 @@ void mostrarEstadoJugador(const tJugador *j){
   }
 }
 
-//HACER
+// Inicializa tablero, colas y bandidos de una nueva partida.
 void inicializarJuego(tJuego *juego, tConfiguracion *cfg){
+  int i;
+  int maxBandidos;
+  tBandido bandido;
+
   juego->config = *cfg;
   crearLista(&juego->tablero); // Asegurar que la lista se inicializa a NULL, de forma provisoria qeuda así
   CrearCola(&juego->colaMovimientos);
@@ -236,15 +285,37 @@ void inicializarJuego(tJuego *juego, tConfiguracion *cfg){
   juego->turnoActual=1;
 
   generarTablero(&juego->tablero,cfg);
+
+  /*
+   * Los bandidos viven en una lista separada para que puedan compartir casilla
+   * con premios, oasis u otros eventos sin modificar la ruta base.
+   */
+  maxBandidos = cfg->cantidadBandidos;
+  if (maxBandidos > cfg->totalCasillas - 2) {
+    maxBandidos = cfg->totalCasillas - 2;
+  }
+
+  for(i = 0; i < maxBandidos; i++){
+    int posicion;
+    do {
+      posicion = (rand() % (cfg->totalCasillas - 2)) + 1;
+    } while (posicionOcupadaPorBandido(&juego->bandidos, posicion));
+
+    crearBandido(&bandido, i + 1, posicion);
+    insertarAlFinal(&juego->bandidos, &bandido, sizeof(tBandido));
+  }
 }
 
-//HACER
+// Libera las estructuras dinamicas creadas durante la partida.
 void liberarJuego(tJuego *juego)
 {
-  //LO QUE DICE EL NOMBRE
+  vaciarLista(&juego->tablero);
+  vaciarLista(&juego->bandidos);
+  VaciarCola(&juego->colaMovimientos);
+  VaciarCola(&juego->colaMovimientosJugador);
 }
 
-//HACER
+// Encola un movimiento de jugador o bandido para resolverlo en orden.
 int encolarMovimiento(tCola *cola, tMovimiento movimiento){
   return PonerEnCola(cola,&movimiento,sizeof(tMovimiento));
 }
@@ -267,7 +338,7 @@ void mostrarColaMovimientos(tCola *cola){
 
 //LISTO
 int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento){
-    int nuevaPos, sentido;
+    int nuevaPos, sentido = 1;
 
     if(movimiento.direccion == 'F'){
       sentido = 1;
@@ -278,12 +349,15 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento){
 
     nuevaPos = b->posicion + movimiento.pasos*sentido;
 
-    if(nuevaPos > juego->config.totalCasillas){
-      nuevaPos = (nuevaPos%juego->config.totalCasillas);
+    /*
+     * Los bandidos si usan la ruta como circulo, tal como pide el enunciado.
+     * Se normaliza con modulo para soportar avances y retrocesos.
+     */
+    while(nuevaPos < 0){
+      nuevaPos += juego->config.totalCasillas;
     }
-
-    if(nuevaPos < 1){
-      nuevaPos *= -1;
+    while(nuevaPos >= juego->config.totalCasillas){
+      nuevaPos -= juego->config.totalCasillas;
     }
 
     b->posicion = nuevaPos;
@@ -297,21 +371,23 @@ int verificarColision(tJuego *juego, tBandido *b){
     int colision;
 
     if( (colision = ((juego->jugador.posicion == b->posicion)) && b->activo)){
-      b->activo = 0;
       if(!juego->jugador.protegidoOasis){
+        b->activo = 0;
         juego->jugador.vidas -= 1;
-        posicionarJugador(juego, 1);
+        posicionarJugador(juego, 0);
+      } else {
+        puts("El oasis protege al jugador del bandido.");
       }
     }
 
     return colision;
 }
 
-//REVISAR (EN ESPECIAL LOS PARAMETROS)
+// La victoria se produce cuando el jugador queda sobre la Ciudad Refugio.
 int verificarVictoria(const tJugador *j, const tLista *tablero)
 {
-    //LO QUE DICE EL NOMBRE
-    return 0;
+    tCasilla *casilla = buscarCasilla(tablero, j->posicion);
+    return casilla && casilla->tipo == TIPO_REFUGIO;
 }
 
 //LISTO
@@ -320,15 +396,52 @@ int verificarDerrota(const tJugador *j)
     return (j->vidas <= 0);
 }
 
-//HACER
+// Guarda una foto simple del escenario generado para cumplir con caravana.txt.
 void guardarCaravana(const char *archivo, const tJuego *juego)
 {
+    FILE *f = fopen(archivo, "wt");
+    tNodoListaC *act;
 
+    if (!f || !juego || !juego->tablero) {
+        if (f) fclose(f);
+        return;
+    }
+
+    fprintf(f, "CARAVANA DEL DESIERTO\n");
+    fprintf(f, "Posiciones: %d | Vidas: %d | Bandidos: %d\n\n",
+            juego->config.totalCasillas,
+            juego->config.vidasIniciales,
+            juego->config.cantidadBandidos);
+
+    act = juego->tablero;
+    do {
+        tCasilla *casilla = (tCasilla *)act->info;
+        int hayJugador = juego->jugador.posicion == casilla->posicion;
+        int hayBandido = posicionOcupadaPorBandido(&juego->bandidos, casilla->posicion);
+
+        fprintf(f, "%02d:", casilla->posicion + 1);
+        if (hayJugador || hayBandido) {
+            fprintf(f, "[");
+            if (casilla->tipo != TIPO_NORMAL) fprintf(f, "%c", casilla->tipo);
+            if (hayJugador) fprintf(f, "J");
+            if (hayBandido) fprintf(f, "B");
+            fprintf(f, "]");
+        } else {
+            fprintf(f, "[%c]", casilla->tipo);
+        }
+        fprintf(f, " %s\n", casilla->descripcion);
+        act = act->sig;
+    } while (act != juego->tablero);
+
+    fprintf(f, "\nReferencias: J jugador, B bandido, I inicio, S refugio, P premio, V vida, O oasis, T tormenta, . ruta.\n");
+    fclose(f);
 }
 
-//HACER
+// La carga de caravana queda reservada para una futura opcion de continuar partida.
 int cargarCaravana(const char *archivo, tJuego *juego)
 {
+    (void)archivo;
+    (void)juego;
     return 1;
 }
 

@@ -9,6 +9,8 @@
 #include "include/menu.h"
 #include "include/abb.h"
 
+#define ARCH_PARTIDAS "partidas.dat"
+
 void jugar();
 
 int main()
@@ -29,8 +31,7 @@ int main()
                 jugar();
                 break;
             case 2:
-                printf("Mostrando ranking de jugadores...\n");
-                // TODO: Implementar mostrar_ranking()
+                mostrarRankingJugadores(ARCH_PARTIDAS);
                 pausar_consola();
                 break;
             case 3:
@@ -47,9 +48,6 @@ void jugar(){
     tConfiguracion cfg;
     tRegistroPartida reg;
     int resultado;
-
-    //HACER FUNCION PARA CARGAR INDICE
-    //CARGAR INDICE
 
     if (!cargarConfiguracion("config.txt", &cfg)) {
         printf("No se pudo cargar config.txt. Revise que el archivo exista.\n");
@@ -79,11 +77,11 @@ void jugar(){
 
         if (resultado == 2) {
             mostrarFinJuego(1, &juego.jugador);
-            juego.juegoActivo = 0;//PUESTO PROVISORIAMENTE, DEBE IR EN VERIFICAR DERROTA Y VICTORIA
+            juego.juegoActivo = 0;
         }
         if (resultado == 0) {
             mostrarFinJuego(0, &juego.jugador);
-            juego.juegoActivo = 0;//PUESTO PROVISORIAMENTE, DEBE IR EN VERIFICAR DERROTA Y VICTORIA
+            juego.juegoActivo = 0;
         }
 
         if (juego.juegoActivo) {
@@ -91,19 +89,19 @@ void jugar(){
         }
     }
 
-    //HACER UNA FUNCION PARA GUARDAR INDICE
-    //GUARDAR INDICE
-
     printf("\n--- Resumen de Movimientos ---\n");
     mostrarColaMovimientos(&juego.colaMovimientos);
 
+    /*
+     * La partida se persiste al final para que el ranking pueda acumular puntos
+     * por jugador sin mezclar la logica de archivos con el bucle jugable.
+     */
+    reg.idPartida = 0;
     strncpy(reg.nombre, juego.jugador.nombre, MAX_NOMBRE - 1);
     reg.nombre[MAX_NOMBRE - 1] = '\0';
     reg.puntuacion = juego.jugador.puntos;
-
-    /*HACER FUNCION - GUARDAR EN EL ARHIVO DE PARTIDAS
-    guardarPuntaje("puntajes.dat", &reg);
-    */
+    reg.cantidadMovimientos = juego.totalMovimientos;
+    guardarRegistroPartida(ARCH_PARTIDAS, &reg);
 
     liberarJuego(&juego);
 

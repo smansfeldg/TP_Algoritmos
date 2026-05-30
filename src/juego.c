@@ -1,4 +1,7 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "../include/juego.h"
+#include "../include/archivos.h"
 #include <time.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -45,6 +48,25 @@ static const char *descripcionCasilla(char tipo)
   }
 }
 
+static int calcularDestinoJugador(const tJuego *juego, int pasos, char direccion)
+{
+  int destino = juego->jugador.posicion + (direccion == 'B' ? -pasos : pasos);
+
+  if (destino >= juego->config.totalCasillas) {
+    while (destino >= juego->config.totalCasillas || destino < 0) {
+      if (destino >= juego->config.totalCasillas) {
+        destino = (juego->config.totalCasillas - 1) - (destino - (juego->config.totalCasillas - 1));
+      }
+      if (destino < 0) {
+        destino *= -1;
+      }
+    }
+  }
+  if (destino < 0) destino = 0;
+
+  return destino;
+}
+
 static void mostrarPanelTurno(const tJuego *juego)
 {
   tCasilla *casillaActual;
@@ -84,7 +106,7 @@ void mostrarBienvenida()
   printf("Las casillas especiales pueden darte puntos, vidas o afectar tu turno.\n");
 }
 
-//COMPLETAR
+// Inicia la partida solicitando el jugador y enlazandolo con los registros.
 int iniciarPartida(tJuego *juego){
   char nombre[MAX_NOMBRE];
 
@@ -92,13 +114,15 @@ int iniciarPartida(tJuego *juego){
   printf("\nIngrese su nombre de jugador: ");
   leerLinea(nombre, MAX_NOMBRE);
 
-  //NO VA
   if (strlen(nombre) == 0) {
       strcpy(nombre, "Jugador1");
   }
-  // TODO: buscar/crear el jugador real desde el archivo de usuarios.
-
   crearJugador(&juego->jugador,nombre,0,juego->config.vidasIniciales);
+  /*
+   * El alta/busqueda queda en archivos.c: la capa de juego solo pide el nombre
+   * y recibe un id persistente para vincular las partidas.
+   */
+  obtenerORegistrarJugador("jugadores.dat", "indice_jugadores.dat", &juego->jugador);
 
   return 1;
 }
@@ -128,7 +152,14 @@ void imprimirCasillaJuego(void *info, void *contexto)
 
     if (juego->jugador.posicion == casilla->posicion)
     {
-        printf("[J]");
+        if (casilla->tipo == TIPO_NORMAL)
+        {
+            printf("[J]");
+        }
+        else
+        {
+            printf("[%cJ]", casilla->tipo);
+        }
     }
     else
     {
@@ -147,7 +178,7 @@ void imprimirCasillaJuego(void *info, void *contexto)
     }
 }
 
-//EN DEBATE - HACER
+// Muestra el tablero con una convencion uniforme para casilleros compuestos.
 void mostrarTableroConPosiciones(const tJuego *juego)
 {
     if (!juego) return;
@@ -175,9 +206,11 @@ int procesarMovimientoJugador(tJuego *juego){
   // Se valida la direccion con una linea completa para evitar saltos por Enter pendiente.
   do{
     printf("\nMovimiento disponible:\n");
-    printf("  F - Avanzar hasta la posicion %d\n", juego->jugador.posicion + nuevoMovimiento.pasos + 1);
+    printf("  F - Avanzar hasta la posicion %d\n",
+           calcularDestinoJugador(juego, nuevoMovimiento.pasos, 'F') + 1);
     if(puedeRetroceder){
-      printf("  B - Retroceder hasta la posicion %d\n", juego->jugador.posicion - nuevoMovimiento.pasos + 1);
+      printf("  B - Retroceder hasta la posicion %d\n",
+             calcularDestinoJugador(juego, nuevoMovimiento.pasos, 'B') + 1);
     }
     printf("Elija direccion: ");
 
@@ -249,11 +282,12 @@ void jugarTurnoComputadora(tJuego *juego){
   }
 }
 
-//COMPLETAR/DISCUTIR
+// Ejecuta un turno completo: encola movimientos, resuelve efectos y verifica fin.
 int ejecutarTurno(tJuego *juego){
     int estadoJuego=1;//0-DERROTA 1-JUGANDO 2-VICTORIA
     tMovimiento nuevoMovimiento;
     tCasilla *casillaActual;
+    int protegidoAlInicio = juego->jugador.protegidoOasis;
 
     mostrarPanelTurno(juego);
 
@@ -291,7 +325,7 @@ int ejecutarTurno(tJuego *juego){
     if (verificarDerrota(&juego->jugador)) {
       return 0;
     }
-    if (juego->jugador.posicion == juego->config.totalCasillas - 1) {
+    if (verificarVictoria(&juego->jugador, &juego->tablero)) {
       return 2;
     }
 
@@ -306,13 +340,16 @@ int ejecutarTurno(tJuego *juego){
     if (verificarDerrota(&juego->jugador)) {
       estadoJuego = 0;
     }
+    if (protegidoAlInicio && casillaActual && casillaActual->tipo != TIPO_OASIS) {
+      juego->jugador.protegidoOasis = 0;
+    }
 
     juego->turnoActual++;
 
     return estadoJuego;
 }
 
-//HACER
+// Imprime el resultado final con los datos principales del jugador.
 void mostrarFinJuego(int victoria, const tJugador *j)
 {
   printf("\n========================================\n");
@@ -331,5 +368,3 @@ void mostrarFinJuego(int victoria, const tJugador *j)
   }
 }
 
-//HACER UNA FUNCION PARA PROCESAR LAS PARTIDAS DE JUGADORES EN UNA LISTA ORDENADA POR PUNTOS TOTALES
-//HACER UNA FUNCION PARA MOSTRAR LA LISTA DE PUNTAJES
