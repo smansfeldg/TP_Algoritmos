@@ -89,6 +89,7 @@ int procesarMovimientoJugador(tJuego *juego){
   tMovimiento nuevoMovimiento;
 
   puts("Presione cualquier tecla para lanzar el dado. . .");
+  fflush(stdin);
   getc(stdin);
 
   nuevoMovimiento.pasos=lanzarDado();
@@ -106,8 +107,10 @@ int procesarMovimientoJugador(tJuego *juego){
 
     fflush(stdin);
     nuevoMovimiento.direccion = getc(stdin);
-  }while( !( (nuevoMovimiento.direccion == 'B') && ((juego->jugador.posicion - nuevoMovimiento.pasos) >= 0) )
-       || !(nuevoMovimiento.direccion == 'F') );
+    if(nuevoMovimiento.direccion == 'f') nuevoMovimiento.direccion = 'F';
+    if(nuevoMovimiento.direccion == 'b') nuevoMovimiento.direccion = 'B';
+  }while( !(((nuevoMovimiento.direccion == 'B') && ((juego->jugador.posicion - nuevoMovimiento.pasos) >= 0)) 
+         || (nuevoMovimiento.direccion == 'F')) );
 
   encolarMovimiento(&juego->colaMovimientos,nuevoMovimiento);
   encolarMovimiento(&juego->colaMovimientosJugador,nuevoMovimiento);
