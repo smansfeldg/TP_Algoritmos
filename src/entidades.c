@@ -92,10 +92,10 @@ int generarTablero(tLista *tablero, const tConfiguracion *cfg)
 
     casillas[0].tipo = TIPO_INICIO;
     strcpy(casillas[0].descripcion, "Inicio");
-    
+
     // Asignar especiales aleatoriamente
     int c;
-    
+
     c = 0;
     while(c < cfg->cantidadOasis) {
         int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
@@ -135,7 +135,7 @@ int generarTablero(tLista *tablero, const tConfiguracion *cfg)
             c++;
         }
     }
-    
+
     // El ultimo nodo podría ser el refugio? El TP no lo especifica claro, asignemos al final.
     casillas[cfg->totalCasillas - 1].tipo = TIPO_REFUGIO;
     strcpy(casillas[cfg->totalCasillas - 1].descripcion, "Refugio / Fin");
@@ -145,7 +145,7 @@ int generarTablero(tLista *tablero, const tConfiguracion *cfg)
     {
         insertarAlFinal(tablero, &casillas[i], sizeof(tCasilla));
     }
-    
+
     free(casillas);
     return 1;
 }
@@ -359,13 +359,79 @@ int posicionarJugador(tJuego *juego, int posicion){
 }
 
 //ADEMAS DEBERIA HABER UN PAR DE FUNCIONES PARA GUARDAR Y CARGAR JUGADORES, OTRO PAR PARA LAS PARTIDAS Y OTRO PAR PARA EL INDICE
+int IndexarArchivo(FILE *archJ, char *nombreArch, ArbolBin *arbolIndx, unsigned tam)
+{
+    FILE *archIndice;
+    if(abrirArchivo(&archIndice,nombreArch,"rb",0)==0)
+       return 0;
 
-int crearRanking(tLista *ranking, FILE* arch)
+    crearArbolBin(arbolIndx);
+    tRegistroJugador jugador;
+    tIndice auxIndx;
+
+    fseek(archIndice,0,SEEK_END);
+    int nroRegistro=0;
+
+    while(fread(&jugador,sizeof(tRegistroJugador),1,archJ)==1)
+    {
+        auxIndx.registro=nroRegistro;
+        strcpy(auxIndx.nombre,jugador.nombre);
+        insertarNodoArbolBin(arbolIndx,&auxIndx,sizeof(tIndice),cmpIndxNombre);
+        nroRegistro++;
+    }
+
+    cerrarArchivo(&archIndice,nombreArch,0);
+
+    return 1;
+}
+
+void actualizarJugadores(FILE *archJug, ArbolBin *indice, const tRegistroJugador *nuevo)
+{
+    escribirNuevoReg(archJug,nuevo,sizeof(tRegistroJugador));
+    fflush(archJug);
+
+    tIndice aux;
+    strcpy(aux.nombre,nuevo->nombre);
+    aux.registro=(ftell(archJug)/sizeof(tRegistroJugador))-1;
+
+    insertarNodoArbolBin(indice,&aux,sizeof(tIndice), cmpIndxNombre);
+}
+int cmpIndxNombre(const void *a, const void *b)
+{
+    tIndice *indx1=(tIndice*)a;
+    tIndice *indx2=(tIndice*)b;
+
+    return strcmp(indx1->nombre,indx2->nombre);
+}
+
+int archivarIndice(char *nombreArch, ArbolBin *arbolIndx)
+{
+    FILE *archIndice;
+    if(abrirArchivo(&archIndice,nombreArch,"wb",0)==0)
+       return 0;
+
+    recorrerEnOrdenArbolBin(arbolIndx,0,archIndice, guardNodoIndxEnArchivo);
+
+    return cerrarArchivo(&archIndice,nombreArch,0);
+}
+
+void guardNodoIndxEnArchivo(void *dato, size_t tam, unsigned nivel, void *params)
+{
+    FILE *arch=(FILE*)params;
+    fwrite(dato,tam,1,arch);
+}
+
+int buscarJugador(char *nombre, ArbolBin *indice, cmp Cmp)
+{
+    return(buscarNodoArbolBin(indice,nombre,Cmp)!=NULL);
+}
+
+/////
+////
+int crearRanking(tLista *ranking, FILE* arch, ArbolBin *indice, FILE *archJug)
 {
     crearLista(ranking);
     leerArchivoBin(arch,ranking,sizeof(tRegistroRanking),cargarRanking);
-    //Agregar Funcion que recorra la lista, y segun el id agregue el nombre del jugador
-    ordenarLista(ranking, cmpPuntos);
 
     return 1;
 }
@@ -375,46 +441,65 @@ void cargarRanking(void *ranking, const void *dato)
     tRegistroPartida *partida=(tRegistroPartida*)dato;
     tRegistroRanking reg;
 
-    reg.idJugador=partida->idJugador;
-    reg.nombre[0]='\n';
+    strcpy(reg.nombre,partida->nombre);
+    reg.idJugador=0;
     reg.cantidadPartidas=1;
     reg.puntuacionTotal=partida->puntuacion;
-    //Cambiar a insertar con duplicado
-    insertarAlFinal(ranking,&reg,sizeof(tRegistroRanking));
+    insertarEnOrden(ranking,&reg,sizeof(tRegistroRanking),cmpRankNombres,sumarRankPuntos);
+
 }
-int cmpPuntos(const void *a, const void *b)
+int cmpRankNombres(const void*a, const void *b)
 {
     tRegistroRanking *reg1=(tRegistroRanking*)a;
     tRegistroRanking *reg2=(tRegistroRanking*)b;
 
-    return (reg1->puntuacionTotal)-(reg2->puntuacionTotal);
+    return strcmp(reg1->nombre,reg2->nombre);
 }
 
-int actualizarRegistroPartidas(FILE* arch, tLista *ranking, tRegistroPartida partida)
+int sumarRankPuntos(void **dato1, unsigned *tam1, const void* dato2, unsigned tam2)
 {
-    escribirNuevoReg(arch,&partida,sizeof(tRegistroPartida));
+    tRegistroRanking **reg1=(tRegistroRanking**)dato1;
+    tRegistroRanking *reg2=(tRegistroRanking*)dato2;
+
+    (*reg1)->puntuacionTotal+=reg2->puntuacionTotal;
+    (*reg1)->cantidadPartidas++;
+
+    return 1;
+}
+
+int cmpRankPuntos(const void *a, const void *b)
+{
+    tRegistroRanking *reg1=(tRegistroRanking*)a;
+    tRegistroRanking *reg2=(tRegistroRanking*)b;
+
+    return reg2->puntuacionTotal-reg1->puntuacionTotal;
+}
+
+int actualizarRegistroPartidas(FILE* arch, tLista *ranking, const tRegistroPartida *partida)
+{
+    escribirNuevoReg(arch,partida,sizeof(tRegistroPartida));
 
     tRegistroRanking nuevo;
 
-    nuevo.idJugador=partida.idJugador;
-    //Buscar nombre del jugador a traves del Indice a partir de su ID
-    nuevo.nombre[0]='\n';
+    nuevo.idJugador=0;
+    strcpy(nuevo.nombre,partida->nombre);
     nuevo.cantidadPartidas=1;
-    nuevo.puntuacionTotal=partida.puntuacion;
-    //Cambiar a insertar con duplicado
-    insertarAlFinal(ranking,&nuevo,sizeof(tRegistroRanking));
+    nuevo.puntuacionTotal=partida->puntuacion;
+    insertarEnOrden(ranking,&nuevo,sizeof(tRegistroRanking),cmpRankNombres,sumarRankPuntos);
 
     return 1;
 }
 void mostrarListaRanking(tLista *ranking)
 {
+    ordenarLista(ranking, cmpRankPuntos);
     printf("\nRANKING DE JUGADORES:\n");
     printf("---\n");
     mostrarDeIzqADer(ranking, mostrarRanking);
-    printf("\n---");
+    printf("\n---\n");
+    ordenarLista(ranking, cmpRankNombres);
 }
 void mostrarRanking(const void *reg)
 {
     tRegistroRanking *ranking=(tRegistroRanking*)reg;
-    printf("%s  |  Puntos: %d  | Cantidad de Partidas: %d",ranking->nombre,ranking->puntuacionTotal,ranking->cantidadPartidas);
+    printf("%s\tCodigo: %d |  Puntos: %d  | Cantidad de Partidas: %d\n",ranking->nombre,ranking->idJugador,ranking->puntuacionTotal,ranking->cantidadPartidas);
 }

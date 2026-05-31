@@ -35,7 +35,7 @@ int escribirPos(FILE* arch,const void *dato, unsigned tam, int pos);
 int actualizarRegistro(FILE* arch, void *reg, const void *dato, unsigned tam, accion Accion);
 
 int escribirTxt(FILE *arch, void *dato, unsigned tamLinea, accion Accion);
-int escribirNuevoReg(FILE *arch, void *dato, unsigned tam);
+int escribirNuevoReg(FILE *arch, const void *dato, unsigned tam);
 
 
 #endif // ARCHIVOS_H

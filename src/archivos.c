@@ -161,7 +161,7 @@ int escribirTxt(FILE *arch, void *dato, unsigned tamLinea, accion Accion)
     return OK;
 }
 
-int escribirNuevoReg(FILE *arch, void *dato, unsigned tam)
+int escribirNuevoReg(FILE *arch, const void *dato, unsigned tam)
 {
     fseek(arch,0,SEEK_END);
     return fwrite(dato, tam,1,arch)==1;
