@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1779318598 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/main.c
+1780161971 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -10,20 +10,20 @@
 	"include/menu.h"
 	"include/abb.h"
 
-1779318483 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/entidades.h
+1780162662 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/entidades.h
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	"lista_circular.h"
 	"cola.h"
+	"archivos.h"
 
-1778615142 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/archivos.h
+1780068994 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/archivos.h
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
-	"entidades.h"
 
-1779248589 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/juego.h
+1780161508 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/juego.h
 	"entidades.h"
 	"cola.h"
 
@@ -35,17 +35,17 @@
 1778615142 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/abb.h
 	<stdio.h>
 
-1778615142 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/cola.c
+1780103466 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/cola.c
 	"../include/cola.h"
 
 1778615142 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/cola.h
 	<stdlib.h>
 	<string.h>
 
-1778615142 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/lista_circular.c
+1780091425 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/lista_circular.c
 	"../include/lista_circular.h"
 
-1778615142 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/lista_circular.h
+1780091347 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/lista_circular.h
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -57,16 +57,16 @@
 
 1778615142 /home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/include/menu.h
 
-1779307824 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/archivos.c
+1780087079 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/archivos.c
 	"../include/archivos.h"
 
-1779318398 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/juego.c
+1780162687 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/juego.c
 	"../include/juego.h"
 	<time.h>
 	<ctype.h>
 	<stdio.h>
 
-1779318491 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/entidades.c
+1780162647 source:/home/sopesto/Escritorio/UNLaM/UNLaM - Programacion/Algoritmos y Estructura de Datos/TP_Algoritmos/src/entidades.c
 	"../include/entidades.h"
 	<time.h>
 	<ctype.h>

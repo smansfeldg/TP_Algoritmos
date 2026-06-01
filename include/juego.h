@@ -8,11 +8,12 @@ int iniciarPartida(tJuego *juego);
 int ejecutarTurno(tJuego *juego);
 int procesarMovimientoJugador(tJuego *juego);
 int procesarMovimientoBandidos(tJuego *juego);
-void mostrarTableroConPosiciones(const tJuego *juego);
+void mostrarTablero(const tLista *tablero);
 int lanzarDado();
 int obtenerPasosMovimiento();
 void mostrarBienvenida();
-void mostrarFinJuego(int victoria, const tJugador *j);
-void jugarTurnoComputadora(tJuego *juego);
+void mostrarFinJuego(int victoria, const tJuego *j);
+void mostrarReglas();
+int jugarTurnoComputadora(tJuego *juego);
 
 #endif

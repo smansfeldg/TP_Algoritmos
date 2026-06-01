@@ -11,21 +11,22 @@
 
 void jugar();
 
-int main()
-{
+int main(){
     srand((unsigned)time(NULL));
 
     int opcion_elegida = 0;
 
+    mostrarBienvenida();
+    pausar_consola();
+    limpiar_pantalla();
+
     do {
-        limpiar_pantalla();
         mostrar_menu_principal();
         opcion_elegida = obtener_opcion(3); // Actualizar al agregar futuras opciones
 
         switch(opcion_elegida) {
             case 1:
                 printf("Iniciando juego...\n");
-                pausar_consola();
                 jugar();
                 break;
             case 2:
@@ -37,6 +38,7 @@ int main()
                 printf("Saliendo del juego...\n");
                 break;
         }
+        limpiar_pantalla();
     } while(opcion_elegida != 3);
 
     return 0;
@@ -56,38 +58,34 @@ void jugar(){
 
     inicializarJuego(&juego, &cfg);
     iniciarPartida(&juego);
+    limpiar_pantalla();
 
     guardarCaravana("caravana.txt", &juego);
+    mostrarReglas();
+    printf("!Tablero listo!\nPosicion inicial: 1 (Inicio)\n");
+    printf("Objetivo: Llegar a la posicion %d (Ciudad Refugio)\n\n", cfg.totalCasillas);
 
-    mostrarBienvenida();
-    printf("\nTablero generado! Posicion inicial: 1 (Inicio)\n");
-    printf("Objetivo: Llegar a la posicion %d (Refugio)\n", cfg.totalCasillas);
     pausar_consola();
 
+    limpiar_pantalla();
+    mostrarTablero(&juego.tablero);
     while (juego.juegoActivo) {
-        printf("\nContinuar...");
-        pausar_consola();
-        limpiar_pantalla();
-        mostrarTablero(&juego.tablero);
-
         resultado = ejecutarTurno(&juego);
 
-        //REEMPLAZAR POR MOSTRAR FIN JUEGO
-        if (resultado == 2) {
-            printf("\n*** HAS GANADO! ***\n");
-            juego.juegoActivo = 0;//PUESTO PROVISORIAMENTE, DEBE IR EN VERIFICAR DERROTA Y VICTORIA
-        }
-        if (resultado == 0) {
-            printf("\n*** HAS PERDIDO ***\n");
-            juego.juegoActivo = 0;//PUESTO PROVISORIAMENTE, DEBE IR EN VERIFICAR DERROTA Y VICTORIA
-        }
+        //MUESTRA EL FINAL DEL JUEGO SI SE DA EL MISMO
+        mostrarFinJuego(resultado,&juego);
+
+        pausar_consola();
+
+        limpiar_pantalla();
+        mostrarTablero(&juego.tablero);
     }
 
     //HACER UNA FUNCION PARA GUARDAR INDICE
     //GUARDAR INDICE
 
-    printf("\n--- Resumen de Movimientos ---\n");
-    mostrarColaMovimientos(&juego.colaMovimientos);
+    printf("\n  --- Resumen de Movimientos ---\n");
+    mostrarColaMovimientos(&juego.colaMovimientosJugador);
 
     strncpy(reg.nombre, juego.jugador.nombre, MAX_NOMBRE - 1);
     reg.nombre[MAX_NOMBRE - 1] = '\0';
@@ -100,6 +98,6 @@ void jugar(){
     liberarJuego(&juego);
 
 
-    printf("\nPARTIDA FINALIZADA!\n");
+    puts("\n¡PARTIDA FINALIZADA!");
     pausar_consola();
 }

@@ -3,30 +3,34 @@
 #include <ctype.h>
 #include <stdio.h>
 
-//HACER
-void mostrarBienvenida()
-{
-  //IMPRIME EL MENSAJE BIENVENIDA
+//LISTO
+void mostrarBienvenida(){
+  puts("\n\t\t\t° ° ° ° ° Caravana ° ° ° ° °");
+  puts("Una caravana intenta atravesar una antigua ruta comercial para llegar a una ciudad refugio antes de que se agoten sus recursos.\n\nA lo largo del trayecto existen tesoros, provisiones, oasis, tormentas de arena y bandidos.\n\nEl desierto es hostil e impredecible. En cada turno el jugador arrojará un dado virtual que generará un valor aleatorio entre 1 y 6. El valor obtenido determinará exactamente la cantidad de posiciones que deberá desplazarse en ese turno.\n\nLos bandidos se desplazan automáticamente tratando de interceptar al jugador.\n\nCada decisión cuenta. La caravana debe avanzar. El desierto no perdona errores.\n");
+}
+
+//LISTO
+void mostrarReglas(){
+  puts("\n\t\t\t* * * * Reglas del juego * * * *\n");
+  puts("\nEl jugador (J) debe desplazarse sobre una ruta desértica persiguiendo el objetivo de llegar desde el Campamento Inicial (I) hasta la Ciudad Refugio (S), evitando ser interceptado por los Bandidos (B) y aprovechando los recursos distribuidos a lo largo del recorrido. Para los bandidos es posible desplazarse hacia atrás y hacia adelante inclusive a través de la entrada y la salida, como si la ruta fuera un círculo. La partida finalizará cuando el jugador alcance la Ciudad Refugio o cuando pierda todas sus vidas antes de alcanzarla.\n\nSi, al efectuar un lanzamiento del dado, el jugador sobrepasara la Ciudad Refugio, deberá continuar su desplazamiento retrocediendo la cantidad de posiciones sobrantes, de modo tal que el movimiento total realizado sea exactamente igual al valor obtenido en el dado.\n\n");
 }
 
 //COMPLETAR
 int iniciarPartida(tJuego *juego){
   char nombre[MAX_NOMBRE];
-
-  //REVISAR HACERLO MÁS SIMPLE Y PRÁCTICO
-  printf("\nIngrese su nombre de jugador: ");
-  while (getchar() != '\n');
-  fgets(nombre, MAX_NOMBRE, stdin);
-  nombre[strcspn(nombre, "\n")] = 0;
-
-  //NO VA
-  if (strlen(nombre) == 0) {
-      strcpy(nombre, "Jugador1");
-  }
+  char *aux;
   //DEBE BUSCAR EN EL ARCHIVO DE USUARIOS POR EL INDICE
+  //REVISAR HACERLO MÁS SIMPLE Y PRÁCTICO
+  do{
+    printf("\nIngrese su nombre de jugador: ");
+    fgets(nombre, MAX_NOMBRE, stdin);
+    aux = strrchr(nombre,'\n');
+    if(aux){
+      (*aux) = '\0';
+    }
+  }while(strlen(nombre) == 0);
 
   crearJugador(&juego->jugador,nombre,1,juego->config.vidasIniciales);
-
   return 1;
 }
 
@@ -35,100 +39,138 @@ int lanzarDado(){
     return (rand() % 6) + 1; // analizar posibilidad de usar una función más robusta
 }
 
-// Helper para comprobar si hay bandido en la posicion
-void checkBandidoPos(void *info, void *contexto)
-{
-    tBandido *b = (tBandido *)info;
-    struct { int pos; int *encontrado; } *ctx = contexto;
-    
-    if (b->activo && b->posicion == ctx->pos)
-    {
-        *(ctx->encontrado) = 1;
+//LISTA
+void imprimirCasillaJuego(const void *info, void* param){
+    tCasilla *casilla = (tCasilla*)info;
+    char casillaImprimir[50];
+    char buff[60];
+    char *aux;
+    int *pos = (int*)param;
+
+    if(!casilla->bandidos && !casilla->inicio && !casilla->jugador && !casilla->normal && !casilla->oasis && !casilla->premios && !casilla->refugio && !casilla->tormenta && !casilla->vidas){
+      casilla->normal = 1;
     }
-}
 
-// Callback para imprimir una casilla puntual del tablero con posiciones
-void imprimirCasillaJuego(void *info, void *contexto)
-{
-    tCasilla *casilla = (tCasilla *)info;
-    const tJuego *juego = (const tJuego *)contexto;
+    sprintf(casillaImprimir, "%02d:[", *pos);
+    (*pos)++;
 
-    if (juego->jugador.posicion == casilla->posicion)
-    {
-        printf("[J]");
+    if(casilla->normal){
+      strcat(casillaImprimir, ".");
     }
-    else
-    {
-        int bandidoEnemigo = 0;
-        struct { int pos; int *encontrado; } ctxBandido = { casilla->posicion, &bandidoEnemigo };
-        recorrerListaYAccionar(&juego->bandidos, &ctxBandido, checkBandidoPos);
+    else{
+      if(casilla->inicio){
+        strcat(casillaImprimir, "I ");
+      }
+      else if(casilla->refugio){
+        strcat(casillaImprimir, "S ");
+      }
+      else{
+        if(casilla->oasis){
+          strcat(casillaImprimir, "O ");
+        }
+        if(casilla->tormenta){
+          strcat(casillaImprimir, "T ");
+        }
+        if(casilla->vidas){
+          if(casilla->vidas>1){
+            sprintf(buff ,"%s%dV ",casillaImprimir,casilla->vidas);
+            strcpy(casillaImprimir,buff);
+          }
+          else
+            strcat(casillaImprimir, "V ");
+        }
+        if(casilla->premios){
+          if(casilla->premios>1){
+            sprintf(buff ,"%s%dP ",casillaImprimir,casilla->premios);
+            strcpy(casillaImprimir,buff);
+          }
+          else
+            strcat(casillaImprimir, "P ");
+        }
+      }
 
-        if (bandidoEnemigo)
-        {
-            printf("[B]");
+      if(casilla->bandidos){
+        if(casilla->bandidos>1){
+          sprintf(buff ,"%s%dB ",casillaImprimir,casilla->bandidos);
+          strcpy(casillaImprimir,buff);
         }
         else
-        {
-            printf("[%c]", casilla->tipo);
-        }
+          strcat(casillaImprimir, "B ");
+      }
+      if(casilla->jugador){
+        strcat(casillaImprimir, "J ");
+      }
     }
+
+    aux = strrchr(casillaImprimir,' ');
+    if(aux)
+      (*aux) = '\0';
+
+    if(strlen(casillaImprimir)<7){
+      aux = strrchr(casillaImprimir,'[');
+      memmove(aux, aux+1,20);
+    }
+    else{
+      strcat(casillaImprimir, "]");
+    }
+
+    puts(casillaImprimir);
 }
 
-//EN DEBATE - HACER
-void mostrarTableroConPosiciones(const tJuego *juego)
-{
-    if (!juego) return;
-    
-    printf("\n--- Mapeo del Desierto ---\n");
-    recorrerListaYAccionar(&juego->tablero, (void *)juego, imprimirCasillaJuego);
-    printf("\n--------------------------\n");
+//LISTA
+void mostrarTablero(const tLista* tablero){
+    int posIni = 1;
+    if (!tablero) return;
+    printf("--- Mapeo del Desierto ---\n\n");
+    mostrarDeIzqADer(tablero, &posIni, imprimirCasillaJuego);
+    printf("\n--------------------------\n\n");
 }
 
-//LISTA/VERIFICAR
+//LISTA
 int procesarMovimientoJugador(tJuego *juego){
   tMovimiento nuevoMovimiento;
+  char buffer[100];
 
-  puts("Presione cualquier tecla para lanzar el dado. . .");
+  printf("Presione cualquier tecla para lanzar el dado. . .");
   getc(stdin);
 
   nuevoMovimiento.pasos=lanzarDado();
+  printf("Obtuviste %d en el dado\n", nuevoMovimiento.pasos);
   nuevoMovimiento.entidad= &(juego->jugador);
   //LE PIDE AL JUGADOR QUE INGRESE UNO DE LOS CARACTERES DE MOVIMIENTO
   //HASTA QUE NO INGRESE UNO VALIDO LE SIGUE PIDIENDO
   //B - RETROCEDER
   //F - AVANZAR
-  do{
-    printf("Ingrese como quiere avanzar:");
-    if((juego->jugador.posicion - nuevoMovimiento.pasos) >= 0){
-      puts("  B - Retroceder");
-    }
-    puts("  F - Avanzar:");
+  puts("Ingrese como quiere moverse:");
+  if((juego->jugador.posicion - nuevoMovimiento.pasos) > 0){
+    puts("(B - Retroceder)");
+  }
+  puts("(F - Avanzar)");
 
-    fflush(stdin);
-    nuevoMovimiento.direccion = getc(stdin);
-  }while( !( (nuevoMovimiento.direccion == 'B') && ((juego->jugador.posicion - nuevoMovimiento.pasos) >= 0) )
-       || !(nuevoMovimiento.direccion == 'F') );
+  do{
+    do{
+      fgets(buffer,100,stdin);
+      fflush(stdin);
+    }while(buffer[0]=='\n');
+
+    nuevoMovimiento.direccion = buffer[0];
+
+  }while( !(nuevoMovimiento.direccion == 'B') && !(nuevoMovimiento.direccion == 'F') );
 
   encolarMovimiento(&juego->colaMovimientos,nuevoMovimiento);
   encolarMovimiento(&juego->colaMovimientosJugador,nuevoMovimiento);
-
   return 1;
 }
 
-//LISTA/VERIFICAR
-int procesarMovimientoBandidos(tJuego *juego){
-  tLista* listaBandidos; //SI SE UTILIZA UNA FUNCION RECORRER LISTA ESTO NO VA
-  tBandido* bandidoActual; //SI SE UTILIZA UNA FUNCION RECORRER LISTA ESTO NO VA
-  listaBandidos = &juego->bandidos; //SI SE UTILIZA UNA FUNCION RECORRER LISTA ESTO NO VA
+//LISTA
+void accionarBandido(void* bandido, void* contexto){
+  tJuego *juego = (tJuego*)contexto;
   tMovimiento nueMov;
-  int posJugador;
-  posJugador = juego->jugador.posicion;
-
-//REEMPLAZAR POR UNA FUNCION DE RECORRER LISTA
-//  while(obtenerYAvanzarLista(listaBandidos, bandidoActual)){
+  tBandido* bandidoActual = (tBandido*)bandido;
+  if(bandidoActual->activo){
     nueMov.pasos=lanzarDado();
     nueMov.entidad=bandidoActual;
-    //HACER FUNCION
+    int posJugador = juego->jugador.posicion;
     //SI POSJUGADOR < POSBANDIDO
     if(posJugador < bandidoActual->posicion) {
       // SI (TOTAL CASILLAS + POSJUGADOR) - POSBANDIDO < POSBANDIDO - POSJUGADOR
@@ -157,68 +199,116 @@ int procesarMovimientoBandidos(tJuego *juego){
     }
 
     encolarMovimiento(&juego->colaMovimientos,nueMov);
-//  }
+  }
+
+}
+
+//LISTA
+int procesarMovimientoBandidos(tJuego *juego){
+
+  recorrerListaYAccionar(&juego->bandidos,juego,accionarBandido);
 
   return 1;
 }
 
-//LISTA/VERIFICAR
-void jugarTurnoComputadora(tJuego *juego){
+//LISTA
+//DEVUELVE 1 SI TERMINO EL TURNO CORRECTAMENTE, O 0 SI EL JUGADOR FUE DERROTADO
+int jugarTurnoComputadora(tJuego *juego){
   tMovimiento nuevoMovimiento;
+  tCasilla* casillaActualBandido;
   tBandido* bandido;
 
-  while(!ColaVacia(&juego->colaMovimientos)){ //(Y SI JUEGO ACTIVO) <---------------------------------------------
+  while(!ColaVacia(&juego->colaMovimientos)){
     desencolarMovimiento(&juego->colaMovimientos, &nuevoMovimiento);
     bandido = (tBandido*)nuevoMovimiento.entidad;
+
+    casillaActualBandido = buscarCasilla(&juego->tablero, bandido->posicion,cmpPosCasillas);
     if(bandido->activo){
-      moverBandido(juego, bandido, nuevoMovimiento);
+      printf("[Movimiento de bandido %d (casilla %d): %d%c]\n",bandido->id,casillaActualBandido->posicion,nuevoMovimiento.pasos,nuevoMovimiento.direccion);
+      if(moverBandido(juego, bandido, nuevoMovimiento, casillaActualBandido) == -1){
+        return 0;
+      }
     }
   }
+
+  return 1;
 }
 
-//COMPLETAR/DISCUTIR
+//LISTA
+//ESTADOS DEL JUEGO
+//0-DERROTA 1-JUGANDO 2-VICTORIA
 int ejecutarTurno(tJuego *juego){
-    int estadoJuego=1;//0-DERROTA 1-JUGANDO 2-VICTORIA
     tMovimiento nuevoMovimiento;
+    tCasilla* casillaActualJugador;
 
-    //HACER FUNCION
-    if(juego->jugador.protegidoOasis){
-      juego->jugador.protegidoOasis = 0;
-    }
-    if(juego->jugador.perdidoTurno){
-      juego->jugador.perdidoTurno = 0;
-    }
+    printf("********** %s **********\n\n", juego->jugador.nombre);
+    printf(" Puntaje: %d\n",juego->jugador.puntos);
+    printf(" Vida: %d\n",juego->jugador.vidas);
+    printf("\n********** Turno %d **********\n", juego->turnoActual);
 
     //FASE DE TIRAR DADOS
     //JUGADOR
-    procesarMovimientoJugador(juego);
+    if(!(juego->jugador.perdidoTurno)){
+      procesarMovimientoJugador(juego);
+    }else{
+      puts("TURNO PERDIDO");
+    }
+
     //BANDIDOS
     procesarMovimientoBandidos(juego);
-
+    puts("[Movimientos procesados]");
     //FASE DE MOVER
     //JUGADOR
-    desencolarMovimiento(&(juego->colaMovimientos), &nuevoMovimiento);
-    moverJugador(juego, nuevoMovimiento);
-    //AGREGAR: SUMAR UNO A LOS MOVIMIENTOS TOTALES DE LA PARTIDA
-    mostrarEstadoJugador(&(juego->jugador));
-    aplicarEfectoCasilla(&(juego->jugador), buscarCasilla(&juego->tablero,(juego->jugador).posicion)->tipo);
-    //BANDIDOS
-    jugarTurnoComputadora(juego);
+    if(!(juego->jugador.perdidoTurno)){
+      desencolarMovimiento(&(juego->colaMovimientos), &nuevoMovimiento);
+      puts("[Movimiento jugador encolado]");
+      casillaActualJugador = buscarCasilla(&juego->tablero,(juego->jugador).posicion,cmpPosCasillas);
+      puts("[Casilla jugador obtenida]");
+      if(!moverJugador(juego, nuevoMovimiento, casillaActualJugador)){
+        return 0;
+      }
+      puts("[Movimiento jugador realizado]");
+    }else{
+      juego->jugador.perdidoTurno = 0;
+    }
 
-    //VERIFICAR CONDICION DE VICTORIA <------------------------------------------------------------ estadoJuego = verificarDerrota(&juego->jugador);
-    //VERIFICAR CONDICION DE DERROTA <------------------------------------------------------------- estadoJuego = verificarVictoria(&juego->jugador, &juego->tablero);
-    //EL ESTADO DEL JUEGO DEBERIA CAMBIAR EN EL MOVIMIENTO DEL JUGADOR Y DE LOS BANDIDOS
+    if(juego->jugador.protegidoOasis){
+      juego->jugador.protegidoOasis = 0;
+    }
+
+    //AGREGAR: SUMAR UNO A LOS MOVIMIENTOS TOTALES DE LA PARTIDA
+    juego->totalMovimientos++;
+    casillaActualJugador = buscarCasilla(&juego->tablero,(juego->jugador).posicion,cmpPosCasillas);
+    //DEVUELVE 1 SI EL USUARIO LLEGO A LA CASILLA DE REFUGIO
+    if(aplicarEfectoCasilla(&(juego->jugador), casillaActualJugador)){
+      juego->juegoActivo=0;
+      return 2;
+    }
+    puts("[Efectos de la casilla aplicados al jugador]");
+
+    //BANDIDOS
+    if(!jugarTurnoComputadora(juego)){
+      juego->juegoActivo=0;
+      return 0;
+    }
+
     //PORQUE NO TIENE SENTIDO SEGUIR PROCESANDO SI YA FINALIZÓ EL JUEGO ADEMÁS DE OTRAS CUESTIONES
 
     juego->turnoActual++;
 
-    return estadoJuego;
+    printf("\n*****************************\n");
+    return 1;
 }
 
-//HACER
-void mostrarFinJuego(int victoria, const tJugador *j)
-{
+//LISTO
+void mostrarFinJuego(int estado, const tJuego *j){
   //IMPRIME POR PANTALLA EL MENSAJE FINAL SEGUN EL RESULTADO DE LA PARTIDA
+  if(estado==2){
+    printf("\nFelicidades %s llegaste a Ciudad Refugio con %d puntos\n", j->jugador.nombre, j->jugador.puntos);
+  }
+  else if(estado==0){
+    puts("\nGAME OVER\nFuiste derrotado por los Bandidos antes de llegar a Ciudad Refugio\n");
+  }
 }
 
 //HACER UNA FUNCION PARA PROCESAR LAS PARTIDAS DE JUGADORES EN UNA LISTA ORDENADA POR PUNTOS TOTALES
