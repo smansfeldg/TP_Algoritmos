@@ -113,7 +113,7 @@ int cargarElementosOrdenadosArbolBin(ArbolBin *arbol, void *datos, int lim_izq, 
     return resultado;
   }
 
-  return cargarElementosOrdenadosArbolBin(&((*arbol)->nodoIzq),datos,medio+1,lim_der,params,leer);
+  return cargarElementosOrdenadosArbolBin(&((*arbol)->nodoDer),datos,medio+1,lim_der,params,leer);
 }
 
 void recorrerEnOrdenArbolBin(ArbolBin *arbol, unsigned nivel, void* params, void (*accion)(void* dato, size_t tam, unsigned nivel, void* params)){
@@ -282,21 +282,15 @@ unsigned cantidadNodosArbolBin(const ArbolBin* arbol){
   if(!(*arbol)){
     return 0;
   }
-  return 1 + alturaArbolBin(&(*arbol)->nodoIzq) + alturaArbolBin(&(*arbol)->nodoDer);
+  return 1 + cantidadNodosArbolBin(&(*arbol)->nodoIzq) + cantidadNodosArbolBin(&(*arbol)->nodoDer);
 }
 
 void liberarArbolBin(ArbolBin *arbol){
-  if((*arbol)->nodoIzq != NULL){
+  if(*arbol){
     liberarArbolBin(&((*arbol)->nodoIzq));
-  }
-  if((*arbol)->nodoDer != NULL){
     liberarArbolBin(&((*arbol)->nodoDer));
-  }
-
-  free((*arbol)->dato);
-
-  if((*arbol) != NULL){
+    free((*arbol)->dato);
     free((*arbol));
+    *arbol=NULL;
   }
-
 }

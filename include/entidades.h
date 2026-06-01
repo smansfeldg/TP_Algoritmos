@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "lista_circular.h"
 #include "cola.h"
 #include "archivos.h"
+#include "abb.h"
 
 #define MAX_NOMBRE 50
 #define MAX_JUGADORES 100
@@ -91,7 +93,7 @@ typedef struct {
 
 typedef struct {
     int idPartida;
-    int idJugador;
+    char nombre[MAX_NOMBRE];
     int puntuacion;
     int cantidadMovimientos;
 } tRegistroPartida;
@@ -107,6 +109,11 @@ typedef struct{
   int cantidadPartidas;
   int puntuacionTotal;
 } tRegistroRanking;
+
+typedef struct{
+    char nombre[MAX_NOMBRE];
+    unsigned registro;
+} tIndice;
 
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas);
 void crearBandido(tBandido *b, int id, int posicion);
@@ -130,10 +137,21 @@ int cargarCaravana(const char *archivo, tJuego *juego);
 int posicionarJugador(tJuego *juego, int posicion);
 int cmpPosCasillas(const void *a, const void *b);
 
-int crearRanking(tLista *ranking, FILE* arch);
+int IndexarArchivo(FILE *archJ, char *nombreArch, ArbolBin *arbolIndx, unsigned tam);
+void actualizarJugadores(FILE *archJug, ArbolBin *indice, const tRegistroJugador *nuevo);
+int cmpIndxNombre(const void *a, const void *b);
+int archivarIndice(char *nombreArch, ArbolBin *arbolIndx);
+void guardNodoIndxEnArchivo(void *dato, size_t tam, unsigned nivel, void *params);
+
+int buscarJugador(char *nombre, ArbolBin *indice, cmp Cmp);
+
+int crearRanking(tLista *ranking, FILE* archPart, ArbolBin *indice, FILE *archJug);
 void cargarRanking(void *ranking, const void *dato);
-int cmpPuntos(const void *a, const void *b);
-int actualizarRegistroPartidas(FILE* arch, tLista *ranking, tRegistroPartida partida);
+int cmpRankNombres(const void*a, const void *b);
+int sumarRankPuntos(void **dato1, unsigned *tam1, const void* dato2, unsigned tam2);
+int cmpRankPuntos(const void *a, const void *b);
+
+int actualizarRegistroPartidas(FILE* arch, tLista *ranking, const tRegistroPartida *partida);
 void mostrarListaRanking(tLista *ranking);
 void mostrarRanking(const void *ranking, void* param);
 
