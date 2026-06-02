@@ -271,13 +271,21 @@ void accionarBandido(void *bandido, void *contexto)
 
   if (!bandidoActual->activo) return;
 
+  // Cada bandido tira un dado en su turno para definir cuantas casillas se mueve. 
   nueMov.pasos = lanzarDado();
   nueMov.entidad = bandidoActual;
 
+  /*
+    La direccion se calcula comparando la distancia
+    hacia adelante y hacia atras hasta la posicion actual del jugador.
+    Como el tablero es circular, se toma el camino mas corto para intentar
+    interceptarlo.
+   */
   haciaAdelante = (posJugador - bandidoActual->posicion + juego->config.totalCasillas) % juego->config.totalCasillas;
   haciaAtras = (bandidoActual->posicion - posJugador + juego->config.totalCasillas) % juego->config.totalCasillas;
   nueMov.direccion = (haciaAdelante <= haciaAtras) ? 'F' : 'B';
 
+  // El bandido no se mueve de inmediato, su movimiento queda en cola para ejecutarse en orden.
   encolarMovimiento(&juego->colaMovimientos, nueMov);
 }
 

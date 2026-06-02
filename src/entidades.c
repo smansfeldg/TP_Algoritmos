@@ -19,6 +19,7 @@ static int claveIgual(const char *clave, const char *esperada)
 static void actualizarNormalCasilla(tCasilla *casilla)
 {
     if (!casilla) return;
+    // Si no tiene ninguna caracteristica especial, es normal.
     casilla->normal = !(casilla->inicio || casilla->refugio || casilla->premios ||
                         casilla->vidas || casilla->oasis || casilla->tormenta ||
                         casilla->jugador || casilla->bandidos);
@@ -301,17 +302,26 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *c
 {
     int nuevaPos = b->posicion;
 
+    /*
+      Primero se "saca" al bandido de la casilla actual para que el tablero
+      no quede con un contador desactualizado mientras se calcula el destino.
+     */
     if (casillaActual && casillaActual->bandidos > 0) {
         casillaActual->bandidos--;
         actualizarNormalCasilla(casillaActual);
     }
 
+    // La direccion viene decidida por accionarBandido: F avanza, B retrocede. 
     if (movimiento.direccion == 'F') {
         nuevaPos += movimiento.pasos;
     } else {
         nuevaPos -= movimiento.pasos;
     }
 
+    /*
+      El tablero es circular, asi que si el bandido se pasa de los extremos
+      se lo hace reingresar por el otro lado hasta quedar dentro de rango.
+     */
     while (nuevaPos < 1) {
         nuevaPos += juego->config.totalCasillas;
     }
@@ -319,6 +329,7 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *c
         nuevaPos -= juego->config.totalCasillas;
     }
 
+    // Se actualiza la posicion y se marca la nueva casilla ocupada por el bandido.
     b->posicion = nuevaPos;
     casillaActual = buscarCasilla(&juego->tablero, b->posicion, cmpPosCasillas);
     if (casillaActual) {
@@ -326,6 +337,7 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *c
         actualizarNormalCasilla(casillaActual);
     }
 
+    // Si termina en la misma casilla que el jugador, se resuelve la intercepcion.
     return verificarColision(juego, b, casillaActual);
 }
 
@@ -333,17 +345,20 @@ int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual)
 {
     tCasilla *inicio;
 
+    // Solo hay choque real si el bandido sigue activo y coincide con la posicion del jugador.
     if (!(b && b->activo && juego->jugador.posicion == b->posicion)) {
         return 0;
     }
 
     puts("El jugador fue interceptado por un bandido.");
+    // El oasis puede anular la primera intercepcion sin perder una vida.
     if (juego->jugador.protegidoOasis) {
         puts("Pero fue protegido por el oasis.");
         juego->jugador.protegidoOasis = 0;
         return 1;
     }
 
+    // Si no hay proteccion, el bandido queda desactivado y el jugador pierde una vida.
     b->activo = 0;
     if (casillaActual && casillaActual->bandidos > 0) {
         casillaActual->bandidos--;
@@ -360,6 +375,7 @@ int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual)
         return -1;
     }
 
+    // El jugador vuelve al campamento inicial despues del choque.
     inicio = buscarCasilla(&juego->tablero, 1, cmpPosCasillas);
     juego->jugador.posicion = 1;
     if (inicio) {
