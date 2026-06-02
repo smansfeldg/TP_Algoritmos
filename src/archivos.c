@@ -116,15 +116,6 @@ int buscarRegistro(FILE* arch, void *reg, const void *dato, unsigned tam, cmp Cm
     return NO_ENCONTRADO;
 }
 
-int actualizarRegistro(FILE* arch, void *reg, const void *dato, unsigned tam, accion Accion)
-{
-    //Reg es obtenido del archivo y dato es conseguido durante la partida
-    //Actualiza el registro a partir del dato.
-    Accion(reg,dato);
-
-    return fwrite(dato,tam,1,arch)==1;
-}
-
 int leerPos(FILE* arch, void *dato, unsigned tam, int pos)
 {
     if(fseek(arch,tam*pos,SEEK_SET)!=0)

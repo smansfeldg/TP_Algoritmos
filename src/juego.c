@@ -16,11 +16,12 @@ void mostrarReglas(){
 }
 
 //COMPLETAR
-int iniciarPartida(tJuego *juego){
+int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice){
   char nombre[MAX_NOMBRE];
   char *aux;
-  //DEBE BUSCAR EN EL ARCHIVO DE USUARIOS POR EL INDICE
-  //REVISAR HACERLO MÁS SIMPLE Y PRÁCTICO
+  int existe;
+  char buffer[100];
+
   do{
     printf("\nIngrese su nombre de jugador: ");
     fgets(nombre, MAX_NOMBRE, stdin);
@@ -28,9 +29,29 @@ int iniciarPartida(tJuego *juego){
     if(aux){
       (*aux) = '\0';
     }
-  }while(strlen(nombre) == 0);
+    existe=buscarJugador(nombre,indice,cmpIndxNombre);
+    if(existe==1)
+    {
+        printf("\nEse nombre ya existe. Eres tu? (S/N)\n");
+        do{
+            fgets(buffer,100,stdin);
+            fflush(stdin);
+        }while(buffer[0]!='S'&&buffer[0]!='N');
+        if(buffer[0]=='S')
+            existe=2;//Jugador ya existente juega una nueva partida
+        else
+            printf("\nEse nombre ya esta en uso, por favor elija otro.");
+    }
+  }while(existe==1);
 
   crearJugador(&juego->jugador,nombre,1,juego->config.vidasIniciales);
+  if(existe!=2)
+  {
+      fseek(archJug,0,SEEK_END);
+      juego->jugador.idJugador=(ftell(archJug)/sizeof(tRegistroJugador))+100;
+      actualizarJugadores(archJug,indice,&juego->jugador);
+  }
+
   return 1;
 }
 

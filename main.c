@@ -9,12 +9,23 @@
 #include "include/menu.h"
 #include "include/abb.h"
 
-void jugar();
+void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking);
 
 int main(){
     srand((unsigned)time(NULL));
 
     int opcion_elegida = 0;
+
+    //Abir Archivos e inicialisar indice y ranking.
+    ArbolBin indice;
+    tLista ranking;
+    tArchivos archivosDelJuego;
+    inicioAbrirArchivos(&archivosDelJuego);
+    IndexarArchivo(archivosDelJuego.archIndice, ARCH_INDICE,&indice,sizeof(tIndice));
+
+    crearRanking(&ranking,archivosDelJuego.archPart,&indice,archivosDelJuego.archJug);
+    leerArchivoBin(archivosDelJuego.archPart,NULL,sizeof(tRegistroPartida),mostrarPartidas);
+    ////
 
     mostrarBienvenida();
     pausar_consola();
@@ -27,13 +38,15 @@ int main(){
         switch(opcion_elegida) {
             case 1:
                 printf("Iniciando juego...\n");
-                jugar();
+                jugar(&archivosDelJuego, &indice, &ranking);
                 break;
+
             case 2:
                 printf("Mostrando ranking de jugadores...\n");
-                // TODO: Implementar mostrar_ranking()
+                mostrarListaRanking(&ranking);
                 pausar_consola();
                 break;
+
             case 3:
                 printf("Saliendo del juego...\n");
                 break;
@@ -41,23 +54,28 @@ int main(){
         limpiar_pantalla();
     } while(opcion_elegida != 3);
 
+
+    //Vaciar listas, guardar cambias y cerrar archivos
+    vaciarLista(&ranking);
+    archivarIndice(archivosDelJuego.archIndice, ARCH_INDICE,&indice);
+    finCerrarArchivos(&archivosDelJuego);
+    //
+
     return 0;
 }
 
-void jugar(){
+void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking){
     tJuego juego;
     tConfiguracion cfg;
     tRegistroPartida reg;
     int resultado;
 
-    //HACER FUNCION PARA CARGAR INDICE
-    //CARGAR INDICE
-
     cargarConfiguracion("config.txt", &cfg);
     mostrarConfiguracion(&cfg);
 
     inicializarJuego(&juego, &cfg);
-    iniciarPartida(&juego);
+    //Corregir implementacon de indices
+    iniciarPartida(&juego, archivosDelJuego->archJug, indice);
     limpiar_pantalla();
 
     guardarCaravana("caravana.txt", &juego);
@@ -89,11 +107,14 @@ void jugar(){
 
     strncpy(reg.nombre, juego.jugador.nombre, MAX_NOMBRE - 1);
     reg.nombre[MAX_NOMBRE - 1] = '\0';
+    reg.cantidadMovimientos=juego.totalMovimientos;
     reg.puntuacion = juego.jugador.puntos;
+    fseek(archivosDelJuego->archPart,0,SEEK_END);
+    reg.idPartida=ftell(archivosDelJuego->archPart)/sizeof(tRegistroPartida)+1;
 
-    /*HACER FUNCION - GUARDAR EN EL ARHIVO DE PARTIDAS
-    guardarPuntaje("puntajes.dat", &reg);
-    */
+    //Guardar Partida
+    //Corregir indice y como se impplementa con el ranking
+    actualizarRegistroPartidas(archivosDelJuego->archPart,ranking,&reg);
 
     liberarJuego(&juego);
 
