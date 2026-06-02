@@ -91,6 +91,30 @@ static void mostrarPanelTurno(const tJuego *juego)
   }
 }
 
+static void agregarTextoCasilla(char *destino, size_t tam, const char *texto)
+{
+  size_t usados = strlen(destino);
+
+  if (usados < tam) {
+    snprintf(destino + usados, tam - usados, "%s", texto);
+  }
+}
+
+static void agregarCantidadCasilla(char *destino, size_t tam, unsigned cantidad, char simbolo)
+{
+  size_t usados = strlen(destino);
+
+  if (usados >= tam) {
+    return;
+  }
+
+  if (cantidad > 1) {
+    snprintf(destino + usados, tam - usados, "%u%c ", cantidad, simbolo);
+  } else {
+    snprintf(destino + usados, tam - usados, "%c ", simbolo);
+  }
+}
+
 void mostrarBienvenida()
 {
   puts("\n\t\t\tCaravana del Desierto");
@@ -159,45 +183,29 @@ void imprimirCasillaJuego(const void *info, void *param)
 {
   const tCasilla *casilla = (const tCasilla *)info;
   char casillaImprimir[80];
-  char buff[80];
   char *aux;
   int *pos = (int *)param;
 
-  sprintf(casillaImprimir, "%02d:[", *pos);
+  snprintf(casillaImprimir, sizeof(casillaImprimir), "%02d:[", *pos);
   (*pos)++;
 
   if (casilla->normal) {
-    strcat(casillaImprimir, ".");
+    agregarTextoCasilla(casillaImprimir, sizeof(casillaImprimir), ".");
   } else {
-    if (casilla->inicio) strcat(casillaImprimir, "I ");
-    if (casilla->refugio) strcat(casillaImprimir, "S ");
-    if (casilla->oasis) strcat(casillaImprimir, "O ");
-    if (casilla->tormenta) strcat(casillaImprimir, "T ");
+    if (casilla->inicio) agregarTextoCasilla(casillaImprimir, sizeof(casillaImprimir), "I ");
+    if (casilla->refugio) agregarTextoCasilla(casillaImprimir, sizeof(casillaImprimir), "S ");
+    if (casilla->oasis) agregarTextoCasilla(casillaImprimir, sizeof(casillaImprimir), "O ");
+    if (casilla->tormenta) agregarTextoCasilla(casillaImprimir, sizeof(casillaImprimir), "T ");
     if (casilla->vidas) {
-      if (casilla->vidas > 1) {
-        sprintf(buff, "%s%dV ", casillaImprimir, casilla->vidas);
-        strcpy(casillaImprimir, buff);
-      } else {
-        strcat(casillaImprimir, "V ");
-      }
+      agregarCantidadCasilla(casillaImprimir, sizeof(casillaImprimir), casilla->vidas, 'V');
     }
     if (casilla->premios) {
-      if (casilla->premios > 1) {
-        sprintf(buff, "%s%dP ", casillaImprimir, casilla->premios);
-        strcpy(casillaImprimir, buff);
-      } else {
-        strcat(casillaImprimir, "P ");
-      }
+      agregarCantidadCasilla(casillaImprimir, sizeof(casillaImprimir), casilla->premios, 'P');
     }
     if (casilla->bandidos) {
-      if (casilla->bandidos > 1) {
-        sprintf(buff, "%s%dB ", casillaImprimir, casilla->bandidos);
-        strcpy(casillaImprimir, buff);
-      } else {
-        strcat(casillaImprimir, "B ");
-      }
+      agregarCantidadCasilla(casillaImprimir, sizeof(casillaImprimir), casilla->bandidos, 'B');
     }
-    if (casilla->jugador) strcat(casillaImprimir, "J ");
+    if (casilla->jugador) agregarTextoCasilla(casillaImprimir, sizeof(casillaImprimir), "J ");
   }
 
   aux = strrchr(casillaImprimir, ' ');
@@ -205,7 +213,7 @@ void imprimirCasillaJuego(const void *info, void *param)
     *aux = '\0';
   }
 
-  strcat(casillaImprimir, "]");
+  agregarTextoCasilla(casillaImprimir, sizeof(casillaImprimir), "]");
   puts(casillaImprimir);
 }
 
