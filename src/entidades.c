@@ -18,6 +18,7 @@ void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vida
     j->puntos = 0;
     j->protegidoOasis = 0;
     j->perdidoTurno = 0;
+    j->idJugador=0;
 }
 
 //LISTO
@@ -264,7 +265,10 @@ void inicializarJuego(tJuego *juego, tConfiguracion *cfg){
 //HACER
 void liberarJuego(tJuego *juego)
 {
-  //LO QUE DICE EL NOMBRE
+    vaciarLista(&juego->tablero);
+    VaciarCola(&juego->colaMovimientos);
+    VaciarCola(&juego->colaMovimientosJugador);
+    vaciarLista((&juego->bandidos));
 }
 
 //LISTO
@@ -397,36 +401,40 @@ int posicionarJugador(tJuego *juego, int posicion){
   return 1;
 }
 
-//ADEMAS DEBERIA HABER UN PAR DE FUNCIONES PARA GUARDAR Y CARGAR JUGADORES, OTRO PAR PARA LAS PARTIDAS Y OTRO PAR PARA EL INDICE
-int IndexarArchivo(FILE *archJ, char *nombreArch, ArbolBin *arbolIndx, unsigned tam)
+int cmpPosCasillas(const void *a, const void *b){
+    tCasilla *cas1=(tCasilla*)a;
+    tCasilla *cas2=(tCasilla*)b;
+    return (cas1->posicion)-(cas2->posicion);
+}
+
+/////////Funciones de Indice///////////
+///////////////////////////////////////
+int IndexarArchivo(FILE *archIndx, char *nombreArch ,ArbolBin *arbolIndx, unsigned tam)
 {
-    FILE *archIndice;
-    if(abrirArchivo(&archIndice,nombreArch,"rb",0)==0)
-       return 0;
+    if(abrirArchivo(&archIndx,nombreArch,"rb",0)==0)
+        return 0;
 
     crearArbolBin(arbolIndx);
-    tRegistroJugador jugador;
     tIndice auxIndx;
 
-    fseek(archIndice,0,SEEK_END);
     int nroRegistro=0;
 
-    while(fread(&jugador,sizeof(tRegistroJugador),1,archJ)==1)
+    while(fread(&auxIndx,tam,1,archIndx)==1)
     {
-        auxIndx.registro=nroRegistro;
-        strcpy(auxIndx.nombre,jugador.nombre);
         insertarNodoArbolBin(arbolIndx,&auxIndx,sizeof(tIndice),cmpIndxNombre);
         nroRegistro++;
     }
 
-    cerrarArchivo(&archIndice,nombreArch,0);
-
-    return 1;
+    return cerrarArchivo(&archIndx,nombreArch,0);
 }
 
-void actualizarJugadores(FILE *archJug, ArbolBin *indice, const tRegistroJugador *nuevo)
+void actualizarJugadores(FILE *archJug, ArbolBin *indice, const tJugador *nuevo)
 {
-    escribirNuevoReg(archJug,nuevo,sizeof(tRegistroJugador));
+    tRegistroJugador auxReg;
+    auxReg.idJugador=nuevo->idJugador;
+    strcpy(auxReg.nombre,nuevo->nombre);
+
+    escribirNuevoReg(archJug,&auxReg,sizeof(tRegistroJugador));
     fflush(archJug);
 
     tIndice aux;
@@ -443,15 +451,16 @@ int cmpIndxNombre(const void *a, const void *b)
     return strcmp(indx1->nombre,indx2->nombre);
 }
 
-int archivarIndice(char *nombreArch, ArbolBin *arbolIndx)
+int archivarIndice(FILE* archIndx, char *nombreArch, ArbolBin *arbolIndx)
 {
-    FILE *archIndice;
-    if(abrirArchivo(&archIndice,nombreArch,"wb",0)==0)
+    if(abrirArchivo(&archIndx,nombreArch,"wb",0)==0)
        return 0;
 
-    recorrerEnOrdenArbolBin(arbolIndx,0,archIndice, guardNodoIndxEnArchivo);
+    recorrerEnOrdenArbolBin(arbolIndx,0,archIndx, guardNodoIndxEnArchivo);
 
-    return cerrarArchivo(&archIndice,nombreArch,0);
+    liberarArbolBin(arbolIndx);
+
+    return cerrarArchivo(&archIndx,nombreArch,0);
 }
 
 void guardNodoIndxEnArchivo(void *dato, size_t tam, unsigned nivel, void *params)
@@ -465,8 +474,8 @@ int buscarJugador(char *nombre, ArbolBin *indice, cmp Cmp)
     return(buscarNodoArbolBin(indice,nombre,Cmp)!=NULL);
 }
 
-/////
-////
+/////////Funciones de Ranking///////////
+////////////////////////////////////////
 int crearRanking(tLista *ranking, FILE* arch, ArbolBin *indice, FILE *archJug)
 {
     crearLista(ranking);
@@ -514,6 +523,7 @@ int cmpRankPuntos(const void *a, const void *b)
     return reg2->puntuacionTotal-reg1->puntuacionTotal;
 }
 
+
 int actualizarRegistroPartidas(FILE* arch, tLista *ranking, const tRegistroPartida *partida)
 {
     escribirNuevoReg(arch,partida,sizeof(tRegistroPartida));
@@ -533,7 +543,7 @@ void mostrarListaRanking(tLista *ranking)
     ordenarLista(ranking, cmpRankPuntos);
     printf("\nRANKING DE JUGADORES:\n");
     printf("---\n");
-    mostrarDeIzqADer(ranking, mostrarRanking);
+    mostrarDeIzqADer(ranking, NULL, mostrarRanking);
     printf("\n---\n");
     ordenarLista(ranking, cmpRankNombres);
 }
@@ -542,3 +552,47 @@ void mostrarRanking(const void *reg, void* param)
     tRegistroRanking *ranking=(tRegistroRanking*)reg;
     printf("%s\tCodigo: %d |  Puntos: %d  | Cantidad de Partidas: %d\n",ranking->nombre,ranking->idJugador,ranking->puntuacionTotal,ranking->cantidadPartidas);
 }
+
+int inicioAbrirArchivos(tArchivos *archivos)
+{
+    if(abrirArchivo(&archivos->archJug,ARCH_JUGADORES,"r+b",0)==0)
+        return 0;
+    if(abrirArchivo(&archivos->archPart,ARCH_PARTIDAS,"r+b",0)==0)
+    {
+        cerrarArchivo(&archivos->archJug,ARCH_JUGADORES,0);
+        return 0;
+    }
+
+    return 1;
+}
+
+int finCerrarArchivos(tArchivos *archivos)
+{
+    if(cerrarArchivo(&archivos->archJug,ARCH_JUGADORES,0)==0)
+        return 0;
+    if(cerrarArchivo(&archivos->archPart,ARCH_PARTIDAS,0)==0)
+        return 0;
+
+    return 1;
+}
+
+
+//Funciones de Prueba
+void mostrarIndx(void *dato, size_t tam, unsigned nivel, void *params)
+{
+    tIndice *indx=(tIndice*)dato;
+    printf("Nombre: %s | Registro: %d\n",indx->nombre,indx->registro);
+}
+
+void mostrarPartidas(void *a, const void *b)
+{
+    tRegistroPartida *p=(tRegistroPartida*)b;
+    printf("Id:%d | Nombre: %s | Puntos: %d | Mov: %d\n",p->idPartida,p->nombre, p->puntuacion,p->cantidadMovimientos);
+}
+
+void mostrarJugadores(void *a, const void *b)
+{
+    tRegistroJugador *j=(tRegistroJugador*)b;
+    printf("Codigo: %d | Nombre: %s\n",j->idJugador,j->nombre);
+}
+

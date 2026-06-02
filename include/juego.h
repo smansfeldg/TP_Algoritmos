@@ -4,7 +4,7 @@
 #include "entidades.h"
 #include "cola.h"
 
-int iniciarPartida(tJuego *juego);
+int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice);
 int ejecutarTurno(tJuego *juego);
 int procesarMovimientoJugador(tJuego *juego);
 int procesarMovimientoBandidos(tJuego *juego);

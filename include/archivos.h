@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ARCH_JUGADORES "jugadores.bin"
+#define ARCH_PARTIDAS "partidas.bin"
+#define ARCH_INDICE "indice.bin"
+
 #define ERROR_ARCH 0
 #define ERROR_MEM -1
 #define NO_ENCONTRADO -1
@@ -31,8 +35,6 @@ int leerArchivoBin(FILE* arch, void *estDatos, unsigned tam, accion Accion);
 int buscarRegistro(FILE* arch, void *reg,const void *dato, unsigned tam, cmp Cmp);
 int leerPos(FILE* arch, void *dato, unsigned tam, int pos);
 int escribirPos(FILE* arch,const void *dato, unsigned tam, int pos);
-
-int actualizarRegistro(FILE* arch, void *reg, const void *dato, unsigned tam, accion Accion);
 
 int escribirTxt(FILE *arch, void *dato, unsigned tamLinea, accion Accion);
 int escribirNuevoReg(FILE *arch, const void *dato, unsigned tam);

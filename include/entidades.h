@@ -115,12 +115,21 @@ typedef struct{
     unsigned registro;
 } tIndice;
 
+typedef struct{
+    FILE *archJug;
+    FILE *archPart;
+    FILE *archIndice;
+}tArchivos;
+
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas);
 void crearBandido(tBandido *b, int id, int posicion);
+
 int cargarConfiguracion(const char *archivo, tConfiguracion *cfg);
 void trozarConfig(void *config, const void *dato);
 void mostrarConfiguracion(const tConfiguracion *cfg);
+
 int generarTablero(tJuego *juego, const tConfiguracion *cfg);
+
 tCasilla* buscarCasilla(const tLista *tablero, int posicion, int (*cmp)(const void*, const void*));
 int moverJugador(tJuego* juego, tMovimiento movimiento, tCasilla* Casilla);
 int aplicarEfectoCasilla(tJugador *j, tCasilla* Casilla);
@@ -137,14 +146,17 @@ int cargarCaravana(const char *archivo, tJuego *juego);
 int posicionarJugador(tJuego *juego, int posicion);
 int cmpPosCasillas(const void *a, const void *b);
 
-int IndexarArchivo(FILE *archJ, char *nombreArch, ArbolBin *arbolIndx, unsigned tam);
-void actualizarJugadores(FILE *archJug, ArbolBin *indice, const tRegistroJugador *nuevo);
+/////////Funciones de Indice///////////
+int IndexarArchivo(FILE *archIndx, char *nombreArch, ArbolBin *arbolIndx, unsigned tam);
+void actualizarJugadores(FILE *archJug, ArbolBin *indice, const tJugador *nuevo);
 int cmpIndxNombre(const void *a, const void *b);
-int archivarIndice(char *nombreArch, ArbolBin *arbolIndx);
+
+int archivarIndice(FILE *archIndx, char *nombreArch, ArbolBin *arbolIndx);
 void guardNodoIndxEnArchivo(void *dato, size_t tam, unsigned nivel, void *params);
 
 int buscarJugador(char *nombre, ArbolBin *indice, cmp Cmp);
 
+/////////Funciones de Ranking///////////
 int crearRanking(tLista *ranking, FILE* archPart, ArbolBin *indice, FILE *archJug);
 void cargarRanking(void *ranking, const void *dato);
 int cmpRankNombres(const void*a, const void *b);
@@ -155,4 +167,11 @@ int actualizarRegistroPartidas(FILE* arch, tLista *ranking, const tRegistroParti
 void mostrarListaRanking(tLista *ranking);
 void mostrarRanking(const void *ranking, void* param);
 
+int inicioAbrirArchivos(tArchivos *archivos);
+int finCerrarArchivos(tArchivos *archivos);
+
+/////////Funciones de Prueba///////////
+void mostrarIndx(void *dato, size_t tam, unsigned nivel, void *params);
+void mostrarPartidas(void *a, const void *b);
+void mostrarJugadores(void *a, const void *b);
 #endif
