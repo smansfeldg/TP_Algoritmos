@@ -17,10 +17,10 @@ int vaciarLista(tLista *p)
     int cant = 0;
     if(!*p)
         return 0;
-        
+
     tNodoListaC *act = *p, *aux;
     /* Rompemos el enlace circular para poder iterar como una lista simple */
-    (*p)->ant->sig = NULL; 
+    (*p)->ant->sig = NULL;
 
     while(act)
     {
@@ -54,14 +54,14 @@ int insertarAlFinal(tLista *p, const void *d, unsigned cantBytes)
     tNodoListaC *nue = (tNodoListaC *)malloc(sizeof(tNodoListaC));
     if(!nue)
         return SIN_MEM;
-        
+
     nue->info = malloc(cantBytes);
     if(!nue->info)
     {
         free(nue);
         return SIN_MEM;
     }
-    
+
     memcpy(nue->info, d, cantBytes);
     nue->tamInfo = cantBytes;
 
@@ -87,14 +87,14 @@ int insertarAlComienzo(tLista *p, const void *d, unsigned cantBytes)
     tNodoListaC *nue = (tNodoListaC *)malloc(sizeof(tNodoListaC));
     if(!nue)
         return SIN_MEM;
-        
+
     nue->info = malloc(cantBytes);
     if(!nue->info)
     {
         free(nue);
         return SIN_MEM;
     }
-    
+
     memcpy(nue->info, d, cantBytes);
     nue->tamInfo = cantBytes;
 
@@ -115,21 +115,20 @@ int insertarAlComienzo(tLista *p, const void *d, unsigned cantBytes)
     return TODO_BIEN;
 }
 
-int mostrarDeIzqADer(const tLista *p,
-                      void (*mostrar)(const void *))
+int mostrarDeIzqADer(const tLista *p, void *param,
+                      void (*mostrar)(const void *, void *))
 {
     int cant = 0;
-    if(!*p)
+    if(!(*p))
         return 0;
 
     tNodoListaC *act = *p;
-    do
-    {
-        mostrar(act->info);
+    do{
+        mostrar(act->info, param);
         act = act->sig;
         cant++;
     } while(act != *p);
-    
+
     return cant;
 }
 
@@ -147,7 +146,7 @@ int mostrarDeDerAIzq(const tLista *p,
         act = act->ant;
         cant++;
     } while(act != (*p)->ant);
-    
+
     return cant;
 }
 
@@ -188,7 +187,7 @@ int insertarEnOrden(tLista *p, const void *d, unsigned cantBytes,
 
     if((nue = (tNodoListaC *)malloc(sizeof(tNodoListaC))) == NULL) return SIN_MEM;
     if((nue->info = malloc(cantBytes)) == NULL) { free(nue); return SIN_MEM; }
-    
+
     memcpy(nue->info, d, cantBytes);
     nue->tamInfo = cantBytes;
 
@@ -209,7 +208,7 @@ void ordenarLista(tLista *p, int (*comparar)(const void *, const void *))
 {
     if(!*p || (*p)->sig == *p)
         return;
-        
+
     int huboCambio;
     tNodoListaC *act;
     do {
@@ -220,10 +219,10 @@ void ordenarLista(tLista *p, int (*comparar)(const void *, const void *))
             {
                 void *auxInfo = act->info;
                 unsigned auxTam = act->tamInfo;
-                
+
                 act->info = act->sig->info;
                 act->tamInfo = act->sig->tamInfo;
-                
+
                 act->sig->info = auxInfo;
                 act->sig->tamInfo = auxTam;
                 huboCambio = 1;
@@ -238,7 +237,7 @@ int eliminarPorClave(tLista *p, void *d, unsigned cantBytes,
 {
     if(!*p)
         return 0;
-        
+
     tNodoListaC *act = *p;
     do {
         if(comparar(act->info, d) == 0)
@@ -265,7 +264,7 @@ int eliminarPorClave(tLista *p, void *d, unsigned cantBytes,
     return 0;
 }
 
-int recorrerListaYAccionar(const tLista *p, void *contexto, void (*accion)(void *info, void *contexto))
+int recorrerListaYAccionar(tLista *p, void *contexto, void (*accion)(void *info, void *contexto))
 {
     int cant = 0;
     if(!*p)
@@ -278,6 +277,30 @@ int recorrerListaYAccionar(const tLista *p, void *contexto, void (*accion)(void 
         act = act->sig;
         cant++;
     } while(act != *p);
-    
+
     return cant;
+}
+
+//DEVUELVE UN PUNTERO A LA INFORMACION DE UN NODO
+int buscarElementoLista(const tLista *p, void **dato, void* aBuscar, int (*cmp)(const void*, const void*)){
+  tNodoListaC *nodoAct;
+  int encontrado = 0, pos=-1, i=0;
+
+  if(!(*p)){
+    return 0;
+  }
+
+  nodoAct = *p;
+
+  do{
+    if(cmp(nodoAct->info,aBuscar)==0){
+      (*dato) = nodoAct->info;
+      encontrado = 1;
+      pos = i;
+    }
+    i++;
+    nodoAct = nodoAct->sig;
+  } while(!encontrado && nodoAct != *p);
+
+  return pos;
 }

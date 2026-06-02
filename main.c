@@ -9,103 +9,114 @@
 #include "include/menu.h"
 #include "include/abb.h"
 
-#define ARCH_PARTIDAS "partidas.dat"
-
-void jugar();
+void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking);
 
 int main()
 {
+    int opcion_elegida = 0;
+    ArbolBin indice;
+    tLista ranking;
+    tArchivos archivosDelJuego;
+
     srand((unsigned)time(NULL));
 
-    int opcion_elegida = 0;
+    if (!inicioAbrirArchivos(&archivosDelJuego)) {
+        puts("No se pudieron abrir los archivos de datos del juego.");
+        return 1;
+    }
+
+    IndexarArchivo(archivosDelJuego.archIndice, ARCH_INDICE, &indice, sizeof(tIndice));
+    crearRanking(&ranking, archivosDelJuego.archPart, &indice, archivosDelJuego.archJug);
+
+    mostrarBienvenida();
+    pausar_consola();
+    limpiar_pantalla();
 
     do {
-        limpiar_pantalla();
         mostrar_menu_principal();
-        opcion_elegida = obtener_opcion(3); // Actualizar al agregar futuras opciones
+        opcion_elegida = obtener_opcion(3);
 
         switch(opcion_elegida) {
             case 1:
                 printf("Iniciando juego...\n");
-                pausar_consola();
-                jugar();
+                jugar(&archivosDelJuego, &indice, &ranking);
                 break;
+
             case 2:
-                mostrarRankingJugadores(ARCH_PARTIDAS);
+                printf("Mostrando ranking de jugadores...\n");
+                mostrarListaRanking(&ranking);
                 pausar_consola();
                 break;
+
             case 3:
                 printf("Saliendo del juego...\n");
                 break;
         }
+        limpiar_pantalla();
     } while(opcion_elegida != 3);
+
+    vaciarLista(&ranking);
+    archivarIndice(archivosDelJuego.archIndice, ARCH_INDICE, &indice);
+    finCerrarArchivos(&archivosDelJuego);
 
     return 0;
 }
 
-void jugar(){
+void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
+{
     tJuego juego;
     tConfiguracion cfg;
     tRegistroPartida reg;
     int resultado;
 
     if (!cargarConfiguracion("config.txt", &cfg)) {
-        printf("No se pudo cargar config.txt. Revise que el archivo exista.\n");
+        printf("No se pudo cargar config.txt. Revise que el archivo exista y sea valido.\n");
         pausar_consola();
         return;
     }
 
+    mostrarConfiguracion(&cfg);
     inicializarJuego(&juego, &cfg);
-    iniciarPartida(&juego);
+    iniciarPartida(&juego, archivosDelJuego->archJug, indice);
+    limpiar_pantalla();
 
     guardarCaravana("caravana.txt", &juego);
-
-    mostrarBienvenida();
-    printf("\nTablero generado! Posicion inicial: 1 (Inicio)\n");
-    printf("Objetivo: Llegar a la posicion %d (Refugio)\n", cfg.totalCasillas);
+    mostrarReglas();
+    printf("!Tablero listo!\nPosicion inicial: 1 (Inicio)\n");
+    printf("Objetivo: Llegar a la posicion %d (Ciudad Refugio)\n\n", cfg.totalCasillas);
     pausar_consola();
 
-    mostrarTableroConPosiciones(&juego);
-
+    limpiar_pantalla();
+    mostrarTablero(&juego.tablero);
     while (juego.juegoActivo) {
-        limpiar_pantalla();
-        mostrarTableroConPosiciones(&juego);
-
         resultado = ejecutarTurno(&juego);
 
-        mostrarTableroConPosiciones(&juego);
-
-        if (resultado == 2) {
-            mostrarFinJuego(1, &juego.jugador);
-            juego.juegoActivo = 0;
-        }
-        if (resultado == 0) {
-            mostrarFinJuego(0, &juego.jugador);
+        if (resultado != 1) {
+            mostrarFinJuego(resultado, &juego);
             juego.juegoActivo = 0;
         }
 
         if (juego.juegoActivo) {
             pausar_consola();
+            limpiar_pantalla();
+            mostrarTablero(&juego.tablero);
         }
     }
 
-    printf("\n--- Resumen de Movimientos ---\n");
-    mostrarColaMovimientos(&juego.colaMovimientos);
+    printf("\n  --- Resumen de Movimientos ---\n");
+    mostrarColaMovimientos(&juego.colaMovimientosJugador);
 
-    /*
-     * La partida se persiste al final para que el ranking pueda acumular puntos
-     * por jugador sin mezclar la logica de archivos con el bucle jugable.
-     */
-    reg.idPartida = 0;
     strncpy(reg.nombre, juego.jugador.nombre, MAX_NOMBRE - 1);
     reg.nombre[MAX_NOMBRE - 1] = '\0';
-    reg.puntuacion = juego.jugador.puntos;
     reg.cantidadMovimientos = juego.totalMovimientos;
-    guardarRegistroPartida(ARCH_PARTIDAS, &reg);
+    reg.puntuacion = juego.jugador.puntos;
+
+    fseek(archivosDelJuego->archPart, 0, SEEK_END);
+    reg.idPartida = (int)(ftell(archivosDelJuego->archPart) / sizeof(tRegistroPartida)) + 1;
+    actualizarRegistroPartidas(archivosDelJuego->archPart, ranking, &reg);
 
     liberarJuego(&juego);
 
-
-    printf("\nPARTIDA FINALIZADA!\n");
+    puts("\nPARTIDA FINALIZADA!");
     pausar_consola();
 }

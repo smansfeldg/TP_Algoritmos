@@ -286,22 +286,11 @@ unsigned cantidadNodosArbolBin(const ArbolBin* arbol){
 }
 
 void liberarArbolBin(ArbolBin *arbol){
-  if(!arbol || !(*arbol)){
-    return;
-  }
-
-  if((*arbol)->nodoIzq != NULL){
+  if(arbol && *arbol){
     liberarArbolBin(&((*arbol)->nodoIzq));
-  }
-  if((*arbol)->nodoDer != NULL){
     liberarArbolBin(&((*arbol)->nodoDer));
-  }
-
-  free((*arbol)->dato);
-
-  if((*arbol) != NULL){
+    free((*arbol)->dato);
     free((*arbol));
+    *arbol=NULL;
   }
-  *arbol = NULL;
-
 }
