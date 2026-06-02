@@ -19,6 +19,7 @@ static int claveIgual(const char *clave, const char *esperada)
 static void actualizarNormalCasilla(tCasilla *casilla)
 {
     if (!casilla) return;
+    // Si no tiene ninguna caracteristica especial, es normal.
     casilla->normal = !(casilla->inicio || casilla->refugio || casilla->premios ||
                         casilla->vidas || casilla->oasis || casilla->tormenta ||
                         casilla->jugador || casilla->bandidos);
@@ -26,6 +27,7 @@ static void actualizarNormalCasilla(tCasilla *casilla)
 
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas)
 {
+    // Se inicializa el estado base del jugador al comenzar o retomar una partida.
     strncpy(j->nombre, nombre, MAX_NOMBRE - 1);
     j->nombre[MAX_NOMBRE - 1] = '\0';
     j->posicion = posicionInicial;
@@ -184,11 +186,13 @@ int moverJugador(tJuego *juego, tMovimiento movimiento, tCasilla *casillaActual)
 {
     int nuevaPos;
 
+    // Se limpia la casilla anterior antes de calcular el nuevo destino.
     if (casillaActual) {
         casillaActual->jugador = 0;
         actualizarNormalCasilla(casillaActual);
     }
 
+    // El jugador avanza o retrocede la cantidad exacta que marco el dado.
     nuevaPos = juego->jugador.posicion;
     if (movimiento.direccion == 'F') {
         nuevaPos += movimiento.pasos;
@@ -198,6 +202,7 @@ int moverJugador(tJuego *juego, tMovimiento movimiento, tCasilla *casillaActual)
         printf("El jugador se movio %d casillas hacia atras\n", movimiento.pasos);
     }
 
+    /* Si el destino se pasa de los limites, se aplica rebote para mantenerlo dentro del tablero. */
     while (nuevaPos > juego->config.totalCasillas || nuevaPos < 1) {
         if (nuevaPos > juego->config.totalCasillas) {
             nuevaPos = juego->config.totalCasillas - (nuevaPos - juego->config.totalCasillas);
@@ -214,10 +219,12 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
 {
     int obtuvoOasis = 0;
 
+    // La Ciudad Refugio termina la partida de forma inmediata.
     if (casilla->refugio) {
         return 1;
     }
 
+    // El oasis da proteccion temporal contra la proxima tormenta o intercepcion.
     if (casilla->oasis) {
         j->protegidoOasis = 1;
         obtuvoOasis = 1;
@@ -225,6 +232,7 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
         casilla->oasis = 0;
     }
 
+    // La tormenta puede quitar la proteccion o forzar a perder un turno.
     if (casilla->tormenta) {
         if (j->protegidoOasis && !obtuvoOasis) {
             j->protegidoOasis = 0;
@@ -238,12 +246,14 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
         casilla->tormenta = 0;
     }
 
+    // Las casillas de vida suman vidas al contador del jugador.
     if (casilla->vidas) {
         printf("El jugador gano %u vidas\n", casilla->vidas);
         j->vidas += (int)casilla->vidas;
         casilla->vidas = 0;
     }
 
+    // Los premios suman puntos para el resultado final.
     if (casilla->premios) {
         printf("El jugador encontro %u premios\n", casilla->premios);
         j->puntos += (int)casilla->premios;
@@ -256,6 +266,7 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
 
 void inicializarJuego(tJuego *juego, tConfiguracion *cfg)
 {
+    // Se copia la configuracion y se construyen las estructuras necesarias para jugar.
     juego->config = *cfg;
     crearLista(&juego->tablero);
     CrearCola(&juego->colaMovimientos);
@@ -301,17 +312,26 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *c
 {
     int nuevaPos = b->posicion;
 
+    /*
+      Primero se "saca" al bandido de la casilla actual para que el tablero
+      no quede con un contador desactualizado mientras se calcula el destino.
+     */
     if (casillaActual && casillaActual->bandidos > 0) {
         casillaActual->bandidos--;
         actualizarNormalCasilla(casillaActual);
     }
 
+    // La direccion viene decidida por accionarBandido: F avanza, B retrocede. 
     if (movimiento.direccion == 'F') {
         nuevaPos += movimiento.pasos;
     } else {
         nuevaPos -= movimiento.pasos;
     }
 
+    /*
+      El tablero es circular, asi que si el bandido se pasa de los extremos
+      se lo hace reingresar por el otro lado hasta quedar dentro de rango.
+     */
     while (nuevaPos < 1) {
         nuevaPos += juego->config.totalCasillas;
     }
@@ -319,6 +339,7 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *c
         nuevaPos -= juego->config.totalCasillas;
     }
 
+    // Se actualiza la posicion y se marca la nueva casilla ocupada por el bandido.
     b->posicion = nuevaPos;
     casillaActual = buscarCasilla(&juego->tablero, b->posicion, cmpPosCasillas);
     if (casillaActual) {
@@ -326,24 +347,26 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *c
         actualizarNormalCasilla(casillaActual);
     }
 
+    // Si termina en la misma casilla que el jugador, se resuelve la intercepcion.
     return verificarColision(juego, b, casillaActual);
 }
 
 int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual)
 {
-    tCasilla *inicio;
-
+    // Solo hay choque real si el bandido sigue activo y coincide con la posicion del jugador.
     if (!(b && b->activo && juego->jugador.posicion == b->posicion)) {
         return 0;
     }
 
     puts("El jugador fue interceptado por un bandido.");
+    // El oasis puede anular la primera intercepcion sin perder una vida.
     if (juego->jugador.protegidoOasis) {
         puts("Pero fue protegido por el oasis.");
         juego->jugador.protegidoOasis = 0;
         return 1;
     }
 
+    // Si no hay proteccion, el bandido queda desactivado y el jugador pierde una vida.
     b->activo = 0;
     if (casillaActual && casillaActual->bandidos > 0) {
         casillaActual->bandidos--;
@@ -360,11 +383,9 @@ int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual)
         return -1;
     }
 
-    inicio = buscarCasilla(&juego->tablero, 1, cmpPosCasillas);
-    juego->jugador.posicion = 1;
-    if (inicio) {
-        inicio->jugador = 1;
-        actualizarNormalCasilla(inicio);
+    // El jugador vuelve al campamento inicial y se revisan colisiones en esa casilla.
+    if (!posicionarJugador(juego, 1)) {
+        return -1;
     }
 
     puts("El jugador pierde una vida y vuelve al Campamento Inicial.");
@@ -435,15 +456,18 @@ int posicionarJugador(tJuego *juego, int posicion)
 {
     tCasilla *casillaActual;
 
+    // La nueva posicion se guarda en el estado del jugador.
     juego->jugador.posicion = posicion;
     casillaActual = buscarCasilla(&juego->tablero, juego->jugador.posicion, cmpPosCasillas);
     if (!casillaActual) {
         return 0;
     }
 
+    // Se marca la casilla ocupada por el jugador y se recalcula su tipo.
     casillaActual->jugador = 1;
     actualizarNormalCasilla(casillaActual);
 
+    // Tras mover al jugador, se revisa si algun bandido quedo en la misma casilla.
     recorrerListaYAccionar(&juego->bandidos, juego, comprobarColisionesJB);
 
     return juego->juegoActivo;

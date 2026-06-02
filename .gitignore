@@ -5,9 +5,10 @@
 # Ignore Code Blocks files
 /TP_Algoritmos.layout
 TP_Algoritmos.depend
+*.depend
 
-# Game files
+# Ignore game files
 caravana.txt
-indice_jugadores.dat
-jugadores.dat
-partidas.dat
+*.bin
+*.dat
+
