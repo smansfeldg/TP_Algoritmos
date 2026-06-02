@@ -11,21 +11,22 @@
 
 void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking);
 
-int main(){
-    srand((unsigned)time(NULL));
-
+int main()
+{
     int opcion_elegida = 0;
-
-    //Abir Archivos e inicialisar indice y ranking.
     ArbolBin indice;
     tLista ranking;
     tArchivos archivosDelJuego;
-    inicioAbrirArchivos(&archivosDelJuego);
-    IndexarArchivo(archivosDelJuego.archIndice, ARCH_INDICE,&indice,sizeof(tIndice));
 
-    crearRanking(&ranking,archivosDelJuego.archPart,&indice,archivosDelJuego.archJug);
-    leerArchivoBin(archivosDelJuego.archPart,NULL,sizeof(tRegistroPartida),mostrarPartidas);
-    ////
+    srand((unsigned)time(NULL));
+
+    if (!inicioAbrirArchivos(&archivosDelJuego)) {
+        puts("No se pudieron abrir los archivos de datos del juego.");
+        return 1;
+    }
+
+    IndexarArchivo(archivosDelJuego.archIndice, ARCH_INDICE, &indice, sizeof(tIndice));
+    crearRanking(&ranking, archivosDelJuego.archPart, &indice, archivosDelJuego.archJug);
 
     mostrarBienvenida();
     pausar_consola();
@@ -33,7 +34,7 @@ int main(){
 
     do {
         mostrar_menu_principal();
-        opcion_elegida = obtener_opcion(3); // Actualizar al agregar futuras opciones
+        opcion_elegida = obtener_opcion(3);
 
         switch(opcion_elegida) {
             case 1:
@@ -54,27 +55,28 @@ int main(){
         limpiar_pantalla();
     } while(opcion_elegida != 3);
 
-
-    //Vaciar listas, guardar cambias y cerrar archivos
     vaciarLista(&ranking);
-    archivarIndice(archivosDelJuego.archIndice, ARCH_INDICE,&indice);
+    archivarIndice(archivosDelJuego.archIndice, ARCH_INDICE, &indice);
     finCerrarArchivos(&archivosDelJuego);
-    //
 
     return 0;
 }
 
-void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking){
+void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
+{
     tJuego juego;
     tConfiguracion cfg;
     tRegistroPartida reg;
     int resultado;
 
-    cargarConfiguracion("config.txt", &cfg);
-    mostrarConfiguracion(&cfg);
+    if (!cargarConfiguracion("config.txt", &cfg)) {
+        printf("No se pudo cargar config.txt. Revise que el archivo exista y sea valido.\n");
+        pausar_consola();
+        return;
+    }
 
+    mostrarConfiguracion(&cfg);
     inicializarJuego(&juego, &cfg);
-    //Corregir implementacon de indices
     iniciarPartida(&juego, archivosDelJuego->archJug, indice);
     limpiar_pantalla();
 
@@ -82,7 +84,6 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking){
     mostrarReglas();
     printf("!Tablero listo!\nPosicion inicial: 1 (Inicio)\n");
     printf("Objetivo: Llegar a la posicion %d (Ciudad Refugio)\n\n", cfg.totalCasillas);
-
     pausar_consola();
 
     limpiar_pantalla();
@@ -90,35 +91,32 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking){
     while (juego.juegoActivo) {
         resultado = ejecutarTurno(&juego);
 
-        //MUESTRA EL FINAL DEL JUEGO SI SE DA EL MISMO
-        mostrarFinJuego(resultado,&juego);
+        if (resultado != 1) {
+            mostrarFinJuego(resultado, &juego);
+            juego.juegoActivo = 0;
+        }
 
-        pausar_consola();
-
-        limpiar_pantalla();
-        mostrarTablero(&juego.tablero);
+        if (juego.juegoActivo) {
+            pausar_consola();
+            limpiar_pantalla();
+            mostrarTablero(&juego.tablero);
+        }
     }
-
-    //HACER UNA FUNCION PARA GUARDAR INDICE
-    //GUARDAR INDICE
 
     printf("\n  --- Resumen de Movimientos ---\n");
     mostrarColaMovimientos(&juego.colaMovimientosJugador);
 
     strncpy(reg.nombre, juego.jugador.nombre, MAX_NOMBRE - 1);
     reg.nombre[MAX_NOMBRE - 1] = '\0';
-    reg.cantidadMovimientos=juego.totalMovimientos;
+    reg.cantidadMovimientos = juego.totalMovimientos;
     reg.puntuacion = juego.jugador.puntos;
-    fseek(archivosDelJuego->archPart,0,SEEK_END);
-    reg.idPartida=ftell(archivosDelJuego->archPart)/sizeof(tRegistroPartida)+1;
 
-    //Guardar Partida
-    //Corregir indice y como se impplementa con el ranking
-    actualizarRegistroPartidas(archivosDelJuego->archPart,ranking,&reg);
+    fseek(archivosDelJuego->archPart, 0, SEEK_END);
+    reg.idPartida = (int)(ftell(archivosDelJuego->archPart) / sizeof(tRegistroPartida)) + 1;
+    actualizarRegistroPartidas(archivosDelJuego->archPart, ranking, &reg);
 
     liberarJuego(&juego);
 
-
-    puts("\n¡PARTIDA FINALIZADA!");
+    puts("\nPARTIDA FINALIZADA!");
     pausar_consola();
 }

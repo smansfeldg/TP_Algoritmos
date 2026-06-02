@@ -223,8 +223,8 @@ NodoRaiz* mayorNodoArbolBin(const ArbolBin* arbol){
     return NULL;
   }
 
-  while((*arbol)->nodoIzq){
-    arbol = &(*arbol)->nodoIzq;
+  while((*arbol)->nodoDer){
+    arbol = &(*arbol)->nodoDer;
   }
 
   return (NodoRaiz*)(*arbol);
@@ -235,8 +235,8 @@ NodoRaiz* menorNodoArbolBin(const ArbolBin* arbol){
     return NULL;
   }
 
-  while((*arbol)->nodoDer){
-    arbol = &(*arbol)->nodoDer;
+  while((*arbol)->nodoIzq){
+    arbol = &(*arbol)->nodoIzq;
   }
 
   return (NodoRaiz*)(*arbol);
@@ -251,7 +251,7 @@ NodoRaiz** mayorSubArbolBin(const ArbolBin* arbol){
     arbol = &(*arbol)->nodoDer;
   }
 
-  return (NodoRaiz**)(*arbol);
+  return (NodoRaiz**)arbol;
 }
 
 NodoRaiz** menorSubArbolBin(const ArbolBin* arbol){
@@ -263,7 +263,7 @@ NodoRaiz** menorSubArbolBin(const ArbolBin* arbol){
     arbol = &(*arbol)->nodoIzq;
   }
 
-  return (NodoRaiz**)(*arbol);
+  return (NodoRaiz**)arbol;
 }
 
 unsigned alturaArbolBin(const ArbolBin* arbol){
@@ -272,8 +272,8 @@ unsigned alturaArbolBin(const ArbolBin* arbol){
     return 0;
   }
 
-  alturaDer = alturaArbolBin(arbol);
-  alturaIzq = alturaArbolBin(arbol);
+  alturaDer = alturaArbolBin(&(*arbol)->nodoDer);
+  alturaIzq = alturaArbolBin(&(*arbol)->nodoIzq);
 
   return 1 + (alturaDer>alturaIzq?alturaDer:alturaIzq);
 }
@@ -286,7 +286,7 @@ unsigned cantidadNodosArbolBin(const ArbolBin* arbol){
 }
 
 void liberarArbolBin(ArbolBin *arbol){
-  if(*arbol){
+  if(arbol && *arbol){
     liberarArbolBin(&((*arbol)->nodoIzq));
     liberarArbolBin(&((*arbol)->nodoDer));
     free((*arbol)->dato);
