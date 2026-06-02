@@ -238,6 +238,7 @@ int procesarMovimientoJugador(tJuego *juego)
 {
   tMovimiento nuevoMovimiento;
   char linea[16];
+  int puedeRetroceder;
 
   // El turno del jugador arranca esperando que confirme el lanzamiento.
   puts("\nPresione Enter para lanzar el dado.");
@@ -247,24 +248,31 @@ int procesarMovimientoJugador(tJuego *juego)
   nuevoMovimiento.pasos = lanzarDado();
   printf("Dado: %d\n", nuevoMovimiento.pasos);
   nuevoMovimiento.entidad = &(juego->jugador);
+  puedeRetroceder = (juego->jugador.posicion - nuevoMovimiento.pasos) > 0;
 
   do {
     // Se muestran las dos direcciones posibles con el destino calculado.
     printf("\nMovimiento disponible:\n");
     printf("  F - Avanzar hasta la posicion %d\n",
            calcularDestinoJugador(juego, nuevoMovimiento.pasos, 'F'));
-    printf("  B - Retroceder hasta la posicion %d\n",
-           calcularDestinoJugador(juego, nuevoMovimiento.pasos, 'B'));
+    if (puedeRetroceder) {
+      printf("  B - Retroceder hasta la posicion %d\n",
+             calcularDestinoJugador(juego, nuevoMovimiento.pasos, 'B'));
+    }
     printf("Elija direccion: ");
 
     leerLinea(linea, sizeof(linea));
     nuevoMovimiento.direccion = (char)toupper((unsigned char)linea[0]);
 
     // Solo se aceptan las opciones validas de avance o retroceso.
-    if (nuevoMovimiento.direccion != 'B' && nuevoMovimiento.direccion != 'F') {
-      printf("Opcion invalida. Use F o B.\n");
+    if (nuevoMovimiento.direccion != 'F' && !(puedeRetroceder && nuevoMovimiento.direccion == 'B')) {
+      printf("Opcion invalida. Use F");
+      if (puedeRetroceder) {
+        printf(" o B");
+      }
+      printf(".\n");
     }
-  } while (nuevoMovimiento.direccion != 'B' && nuevoMovimiento.direccion != 'F');
+  } while (nuevoMovimiento.direccion != 'F' && !(puedeRetroceder && nuevoMovimiento.direccion == 'B'));
 
   // El movimiento del jugador queda en cola para ejecutarse en el turno.
   encolarMovimiento(&juego->colaMovimientos, nuevoMovimiento);

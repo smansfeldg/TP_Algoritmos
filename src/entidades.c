@@ -353,8 +353,6 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *c
 
 int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual)
 {
-    tCasilla *inicio;
-
     // Solo hay choque real si el bandido sigue activo y coincide con la posicion del jugador.
     if (!(b && b->activo && juego->jugador.posicion == b->posicion)) {
         return 0;
@@ -385,12 +383,9 @@ int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual)
         return -1;
     }
 
-    // El jugador vuelve al campamento inicial despues del choque.
-    inicio = buscarCasilla(&juego->tablero, 1, cmpPosCasillas);
-    juego->jugador.posicion = 1;
-    if (inicio) {
-        inicio->jugador = 1;
-        actualizarNormalCasilla(inicio);
+    // El jugador vuelve al campamento inicial y se revisan colisiones en esa casilla.
+    if (!posicionarJugador(juego, 1)) {
+        return -1;
     }
 
     puts("El jugador pierde una vida y vuelve al Campamento Inicial.");
