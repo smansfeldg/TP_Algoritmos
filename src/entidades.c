@@ -27,6 +27,7 @@ static void actualizarNormalCasilla(tCasilla *casilla)
 
 void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas)
 {
+    // Se inicializa el estado base del jugador al comenzar o retomar una partida.
     strncpy(j->nombre, nombre, MAX_NOMBRE - 1);
     j->nombre[MAX_NOMBRE - 1] = '\0';
     j->posicion = posicionInicial;
@@ -185,11 +186,13 @@ int moverJugador(tJuego *juego, tMovimiento movimiento, tCasilla *casillaActual)
 {
     int nuevaPos;
 
+    // Se limpia la casilla anterior antes de calcular el nuevo destino.
     if (casillaActual) {
         casillaActual->jugador = 0;
         actualizarNormalCasilla(casillaActual);
     }
 
+    // El jugador avanza o retrocede la cantidad exacta que marco el dado.
     nuevaPos = juego->jugador.posicion;
     if (movimiento.direccion == 'F') {
         nuevaPos += movimiento.pasos;
@@ -199,6 +202,7 @@ int moverJugador(tJuego *juego, tMovimiento movimiento, tCasilla *casillaActual)
         printf("El jugador se movio %d casillas hacia atras\n", movimiento.pasos);
     }
 
+    /* Si el destino se pasa de los limites, se aplica rebote para mantenerlo dentro del tablero. */
     while (nuevaPos > juego->config.totalCasillas || nuevaPos < 1) {
         if (nuevaPos > juego->config.totalCasillas) {
             nuevaPos = juego->config.totalCasillas - (nuevaPos - juego->config.totalCasillas);
@@ -215,10 +219,12 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
 {
     int obtuvoOasis = 0;
 
+    // La Ciudad Refugio termina la partida de forma inmediata.
     if (casilla->refugio) {
         return 1;
     }
 
+    // El oasis da proteccion temporal contra la proxima tormenta o intercepcion.
     if (casilla->oasis) {
         j->protegidoOasis = 1;
         obtuvoOasis = 1;
@@ -226,6 +232,7 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
         casilla->oasis = 0;
     }
 
+    // La tormenta puede quitar la proteccion o forzar a perder un turno.
     if (casilla->tormenta) {
         if (j->protegidoOasis && !obtuvoOasis) {
             j->protegidoOasis = 0;
@@ -239,12 +246,14 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
         casilla->tormenta = 0;
     }
 
+    // Las casillas de vida suman vidas al contador del jugador.
     if (casilla->vidas) {
         printf("El jugador gano %u vidas\n", casilla->vidas);
         j->vidas += (int)casilla->vidas;
         casilla->vidas = 0;
     }
 
+    // Los premios suman puntos para el resultado final.
     if (casilla->premios) {
         printf("El jugador encontro %u premios\n", casilla->premios);
         j->puntos += (int)casilla->premios;
@@ -257,6 +266,7 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
 
 void inicializarJuego(tJuego *juego, tConfiguracion *cfg)
 {
+    // Se copia la configuracion y se construyen las estructuras necesarias para jugar.
     juego->config = *cfg;
     crearLista(&juego->tablero);
     CrearCola(&juego->colaMovimientos);
@@ -451,15 +461,18 @@ int posicionarJugador(tJuego *juego, int posicion)
 {
     tCasilla *casillaActual;
 
+    // La nueva posicion se guarda en el estado del jugador.
     juego->jugador.posicion = posicion;
     casillaActual = buscarCasilla(&juego->tablero, juego->jugador.posicion, cmpPosCasillas);
     if (!casillaActual) {
         return 0;
     }
 
+    // Se marca la casilla ocupada por el jugador y se recalcula su tipo.
     casillaActual->jugador = 1;
     actualizarNormalCasilla(casillaActual);
 
+    // Tras mover al jugador, se revisa si algun bandido quedo en la misma casilla.
     recorrerListaYAccionar(&juego->bandidos, juego, comprobarColisionesJB);
 
     return juego->juegoActivo;

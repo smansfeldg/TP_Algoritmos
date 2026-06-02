@@ -7,6 +7,7 @@
 
 static void leerLinea(char *destino, int tam)
 {
+  // Lee una linea segura desde stdin y elimina el salto final si existe.
   if (!destino || tam <= 0) return;
 
   if (fgets(destino, tam, stdin) == NULL) {
@@ -68,6 +69,7 @@ static void mostrarPanelTurno(const tJuego *juego)
 
   if (!juego) return;
 
+  // Se consulta la casilla actual para mostrar el contexto del turno.
   casillaActual = buscarCasilla(&juego->tablero, juego->jugador.posicion, cmpPosCasillas);
 
   printf("\n========================================\n");
@@ -142,12 +144,15 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
   do {
     printf("\nIngrese su nombre de jugador: ");
     leerLinea(nombre, MAX_NOMBRE);
+    // Si el usuario no ingresa un nombre, se asigna uno por defecto.
     if (strlen(nombre) == 0) {
       strcpy(nombre, "Jugador1");
     }
 
+    // Se busca si ya existe un jugador con ese nombre en el indice.
     existe = buscarJugador(nombre, indice, cmpIndxNombre);
     if (existe) {
+      // Si ya existe, se confirma si quiere retomar ese usuario.
       printf("\nEse nombre ya existe. Es tu usuario? (S/N): ");
       leerLinea(respuesta, sizeof(respuesta));
       respuesta[0] = (char)toupper((unsigned char)respuesta[0]);
@@ -159,6 +164,7 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
 
   crearJugador(&juego->jugador, nombre, 1, juego->config.vidasIniciales);
 
+  // Si el jugador ya existe, se carga su ID para actualizar su registro al finalizar la partida.
   if (existe) {
     strcpy(buscado.nombre, nombre);
     nodo = buscarNodoArbolBin(indice, &buscado, cmpIndxNombre);
@@ -166,6 +172,7 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
       juego->jugador.idJugador = (int)((tIndice *)nodo->dato)->registro;
     }
   } else {
+    // Si es un usuario nuevo, se asigna el siguiente ID disponible y se guarda en archivos.
     fseek(archJug, 0, SEEK_END);
     juego->jugador.idJugador = (int)(ftell(archJug) / sizeof(tRegistroJugador)) + 1;
     actualizarJugadores(archJug, indice, &juego->jugador);
@@ -232,14 +239,17 @@ int procesarMovimientoJugador(tJuego *juego)
   tMovimiento nuevoMovimiento;
   char linea[16];
 
+  // El turno del jugador arranca esperando que confirme el lanzamiento.
   puts("\nPresione Enter para lanzar el dado.");
   leerLinea(linea, sizeof(linea));
 
+  // El dado define cuantos pasos debera moverse el jugador.
   nuevoMovimiento.pasos = lanzarDado();
   printf("Dado: %d\n", nuevoMovimiento.pasos);
   nuevoMovimiento.entidad = &(juego->jugador);
 
   do {
+    // Se muestran las dos direcciones posibles con el destino calculado.
     printf("\nMovimiento disponible:\n");
     printf("  F - Avanzar hasta la posicion %d\n",
            calcularDestinoJugador(juego, nuevoMovimiento.pasos, 'F'));
@@ -250,11 +260,13 @@ int procesarMovimientoJugador(tJuego *juego)
     leerLinea(linea, sizeof(linea));
     nuevoMovimiento.direccion = (char)toupper((unsigned char)linea[0]);
 
+    // Solo se aceptan las opciones validas de avance o retroceso.
     if (nuevoMovimiento.direccion != 'B' && nuevoMovimiento.direccion != 'F') {
       printf("Opcion invalida. Use F o B.\n");
     }
   } while (nuevoMovimiento.direccion != 'B' && nuevoMovimiento.direccion != 'F');
 
+  // El movimiento del jugador queda en cola para ejecutarse en el turno.
   encolarMovimiento(&juego->colaMovimientos, nuevoMovimiento);
   encolarMovimiento(&juego->colaMovimientosJugador, nuevoMovimiento);
   return 1;
@@ -323,17 +335,22 @@ int ejecutarTurno(tJuego *juego)
   tCasilla *casillaActualJugador;
   int protegidoAlInicio = juego->jugador.protegidoOasis;
 
+  // Se muestra el estado actual antes de que el jugador tome una decision.
   mostrarPanelTurno(juego);
 
   if (!juego->jugador.perdidoTurno) {
+    // Si no esta penalizado por una tormenta, se procesa su movimiento normal.
     procesarMovimientoJugador(juego);
   } else {
+    // La tormenta hace saltar el turno de movimiento del jugador.
     puts("\nLa tormenta obliga al jugador a perder este turno.");
   }
 
+  // Luego se preparan los movimientos de los bandidos para este mismo turno.
   procesarMovimientoBandidos(juego);
 
   if (!juego->jugador.perdidoTurno) {
+    // Se ejecuta el movimiento elegido por el jugador.
     desencolarMovimiento(&juego->colaMovimientos, &nuevoMovimiento);
     casillaActualJugador = buscarCasilla(&juego->tablero, juego->jugador.posicion, cmpPosCasillas);
     if (!moverJugador(juego, nuevoMovimiento, casillaActualJugador)) {
@@ -342,34 +359,41 @@ int ejecutarTurno(tJuego *juego)
     }
     juego->totalMovimientos++;
   } else {
+    // La penalizacion solo dura un turno.
     juego->jugador.perdidoTurno = 0;
   }
 
+  // Una vez movido, se identifica la casilla para aplicar efectos del terreno.
   casillaActualJugador = buscarCasilla(&juego->tablero, juego->jugador.posicion, cmpPosCasillas);
   printf("\nLlegaste a la posicion %d: %s\n",
          juego->jugador.posicion,
          descripcionCasilla(casillaActualJugador));
 
+  // Las casillas especiales pueden terminar la partida o modificar el estado del jugador.
   if (aplicarEfectoCasilla(&juego->jugador, casillaActualJugador)) {
     juego->juegoActivo = 0;
     return 2;
   }
 
+  // Si los efectos dejaron al jugador sin vidas, la partida termina.
   if (verificarDerrota(&juego->jugador)) {
     juego->juegoActivo = 0;
     return 0;
   }
 
+  // Ahora se ejecutan los movimientos de los bandidos contra el tablero actualizado.
   if (!jugarTurnoComputadora(juego)) {
     juego->juegoActivo = 0;
     return 0;
   }
 
+  // Se vuelve a validar derrota porque un bandido puede quitar la ultima vida.
   if (verificarDerrota(&juego->jugador)) {
     juego->juegoActivo = 0;
     return 0;
   }
 
+  // La proteccion del oasis dura hasta que termine este turno o hasta que se use.
   if (protegidoAlInicio && casillaActualJugador && !casillaActualJugador->oasis) {
     juego->jugador.protegidoOasis = 0;
   }
@@ -382,9 +406,11 @@ int ejecutarTurno(tJuego *juego)
 void mostrarFinJuego(int estado, const tJuego *j)
 {
   if (estado == 2) {
+    // Victoria: el jugador llego a la Ciudad Refugio.
     printf("\nFelicidades %s, llegaste a Ciudad Refugio con %d puntos.\n",
            j->jugador.nombre, j->jugador.puntos);
   } else if (estado == 0) {
+    // Derrota: el jugador se quedo sin vidas antes de llegar al final.
     printf("\nGAME OVER\n%s fue derrotado antes de llegar a Ciudad Refugio.\n",
            j->jugador.nombre);
   }
