@@ -321,7 +321,7 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *c
         actualizarNormalCasilla(casillaActual);
     }
 
-    // La direccion viene decidida por accionarBandido: F avanza, B retrocede. 
+    // La direccion viene decidida por accionarBandido: F avanza, B retrocede.
     if (movimiento.direccion == 'F') {
         nuevaPos += movimiento.pasos;
     } else {
@@ -434,11 +434,61 @@ void guardarCaravana(const char *archivo, const tJuego *juego)
     fclose(f);
 }
 
-int cargarCaravana(const char *archivo, tJuego *juego)
+int cargarCaravana(const char *nombreArchivo, tJuego *juego)
 {
-    (void)archivo;
-    (void)juego;
-    return 1;
+    FILE *arch;
+
+    if(abrirArchivo(&arch,nombreArchivo,"rt",0)==0)
+        return 0;
+    int i=0;
+    char buffer[100];
+    int cant;
+
+    while(fgets(buffer,100,arch)!=NULL && buffer[0]!='\n')
+    {
+        //Lee lineas hasta que encuentre el espacio entre el texto y el tablero.
+    }
+
+    //Lee la casilla hasta cargar la cantidad de casillas indicadas por configuracion o hasta el fin del archivo
+    while(fgets(buffer,100,arch)!=NULL && i<juego->config.totalCasillas)
+    {
+        tCasilla auxCas={0,0,0,0,0,0,0,0,0,0};
+        if (sscanf(buffer, " %d:", &auxCas.posicion) != 1)
+            return 0;
+        char *elemento = strchr(buffer,'[');
+        while(*elemento!=']' && *elemento!='\0')
+        {
+            cant=1;
+            if(*elemento>='0' && *elemento<='9')
+            {
+                cant= (*elemento) - '0';
+            }
+            if(*elemento=='I')
+                auxCas.inicio=1;
+            if(*elemento=='J')
+                auxCas.jugador=1;
+            if(*elemento=='B')
+                auxCas.bandidos+=1*cant;
+            if(*elemento=='S')
+                auxCas.refugio=1;
+            if(*elemento=='P')
+                auxCas.premios+=1*cant;
+            if(*elemento=='V')
+                auxCas.vidas+=1*cant;
+            if(*elemento=='O')
+                auxCas.oasis=1;
+            if(*elemento=='T')
+                auxCas.tormenta=1;
+            if(*elemento=='.')
+                auxCas.normal=1;
+
+            elemento++;
+        }
+        insertarAlFinal(&juego->tablero,&auxCas, sizeof(tCasilla));
+        i++;
+    }
+
+    return cerrarArchivo(&arch,nombreArchivo,0);
 }
 
 void comprobarColisionesJB(void *bandido, void *contexto)
