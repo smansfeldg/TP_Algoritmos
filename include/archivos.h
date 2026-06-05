@@ -9,7 +9,7 @@
 #define ARCH_PARTIDAS "partidas.bin"
 #define ARCH_INDICE "indice.bin"
 
-#define ERROR_ARCH 0
+#define ERROR_ARCH -1
 #define ERROR_MEM -1
 #define NO_ENCONTRADO -1
 #define OK 1

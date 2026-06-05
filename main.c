@@ -18,6 +18,7 @@ int main()
     tLista ranking;
     tArchivos archivosDelJuego;
 
+
     srand((unsigned)time(NULL));
 
     if (!inicioAbrirArchivos(&archivosDelJuego)) {
@@ -25,7 +26,7 @@ int main()
         return 1;
     }
 
-    IndexarArchivo(archivosDelJuego.archIndice, ARCH_INDICE, &indice, sizeof(tIndice));
+    IndexarArchivoOrdenado(archivosDelJuego.archIndice, ARCH_INDICE, &indice, sizeof(tIndice));
     crearRanking(&ranking, archivosDelJuego.archPart, &indice, archivosDelJuego.archJug);
 
     mostrarBienvenida();
@@ -81,6 +82,12 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
     limpiar_pantalla();
 
     guardarCaravana("caravana.txt", &juego);
+
+    ///Para probar si carga bien caravana.
+    //vaciarLista(&juego.tablero);
+    //vaciarLista(&juego.bandidos);
+    //cargarCaravana("caravana.txt", &juego);
+
     mostrarReglas();
     printf("!Tablero listo!\nPosicion inicial: 1 (Inicio)\n");
     printf("Objetivo: Llegar a la posicion %d (Ciudad Refugio)\n\n", cfg.totalCasillas);
@@ -106,14 +113,14 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
     printf("\n  --- Resumen de Movimientos ---\n");
     mostrarColaMovimientos(&juego.colaMovimientosJugador);
 
-    strncpy(reg.nombre, juego.jugador.nombre, MAX_NOMBRE - 1);
-    reg.nombre[MAX_NOMBRE - 1] = '\0';
+    strncpy(reg.usuario, juego.jugador.usuario, MAX_NOMBRE - 1);
+    reg.usuario[MAX_NOMBRE - 1] = '\0';
     reg.cantidadMovimientos = juego.totalMovimientos;
     reg.puntuacion = juego.jugador.puntos;
 
     fseek(archivosDelJuego->archPart, 0, SEEK_END);
     reg.idPartida = (int)(ftell(archivosDelJuego->archPart) / sizeof(tRegistroPartida)) + 1;
-    actualizarRegistroPartidas(archivosDelJuego->archPart, ranking, &reg);
+    actualizarRegistroPartidas(*archivosDelJuego, indice, ranking, &reg);
 
     liberarJuego(&juego);
 

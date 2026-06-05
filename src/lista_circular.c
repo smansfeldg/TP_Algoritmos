@@ -264,7 +264,8 @@ int eliminarPorClave(tLista *p, void *d, unsigned cantBytes,
     return 0;
 }
 
-int recorrerListaYAccionar(tLista *p, void *contexto, void (*accion)(void *info, void *contexto))
+////Agregue un nuevo parametro para poder utilizarlo en el ranking. Permitiendo mandar la lista, el indice y el arch de jugador.
+int recorrerListaYAccionar(tLista *p, void *contexto, void *param,void (*accion)(void *info, void *contexto, void *extra))
 {
     int cant = 0;
     if(!*p)
@@ -273,7 +274,7 @@ int recorrerListaYAccionar(tLista *p, void *contexto, void (*accion)(void *info,
     tNodoListaC *act = *p;
     do
     {
-        accion(act->info, contexto);
+        accion(act->info, contexto, param);
         act = act->sig;
         cant++;
     } while(act != *p);

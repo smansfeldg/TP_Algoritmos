@@ -44,7 +44,7 @@ int insertarEnOrden(tLista *p, const void *d, unsigned cantBytes,
 void ordenarLista(tLista *p, int (*comparar)(const void *, const void *));
 int eliminarPorClave(tLista *p, void *d, unsigned cantBytes,
                      int (*comparar)(const void *, const void *));
-int recorrerListaYAccionar(tLista *p, void *contexto, void (*accion)(void *info, void *contexto));
+int recorrerListaYAccionar(tLista *p, void *contexto, void *param, void (*accion)(void *info, void *contexto, void *extra));
 int buscarElementoLista(const tLista *p, void **dato, void* aBuscar, int (*cmp)(const void*, const void*));
 
 #endif // LISTA_CIRCULAR_H

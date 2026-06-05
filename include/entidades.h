@@ -48,7 +48,7 @@ typedef struct {
 } tCasilla;
 
 typedef struct {
-    int idJugador;
+    char usuario[MAX_NOMBRE];
     char nombre[MAX_NOMBRE];
     int posicion;
     int vidas;
@@ -93,25 +93,25 @@ typedef struct {
 
 typedef struct {
     int idPartida;
-    char nombre[MAX_NOMBRE];
+    char usuario[MAX_NOMBRE];
     int puntuacion;
     int cantidadMovimientos;
 } tRegistroPartida;
 
 typedef struct{
-    int idJugador;
+    char usuario[MAX_NOMBRE];
     char nombre[MAX_NOMBRE];
 } tRegistroJugador;
 
 typedef struct{
-  int idJugador;
   char nombre[MAX_NOMBRE];
+  char usuario[MAX_NOMBRE];
   int cantidadPartidas;
   int puntuacionTotal;
 } tRegistroRanking;
 
 typedef struct{
-    char nombre[MAX_NOMBRE];
+    char usuario[MAX_NOMBRE];
     unsigned registro;
 } tIndice;
 
@@ -121,7 +121,7 @@ typedef struct{
     FILE *archIndice;
 }tArchivos;
 
-void crearJugador(tJugador *j, const char *nombre, int posicionInicial, int vidas);
+void crearJugador(tJugador *j, const char *nombre, const char *usuario,int posicionInicial, int vidas);
 void crearBandido(tBandido *b, int id, int posicion);
 
 int cargarConfiguracion(const char *archivo, tConfiguracion *cfg);
@@ -146,24 +146,30 @@ int cargarCaravana(const char *archivo, tJuego *juego);
 int posicionarJugador(tJuego *juego, int posicion);
 int cmpPosCasillas(const void *a, const void *b);
 
+
 /////////Funciones de Indice///////////
-int IndexarArchivo(FILE *archIndx, char *nombreArch, ArbolBin *arbolIndx, unsigned tam);
+int IndexarArchivoOrdenado(FILE *archIndx, char *nombreArch, ArbolBin *arbolIndx, unsigned tam);
+size_t guardarIndiceEnNodo(void **arbo, void*arch, unsigned pos, void* param);
+
 void actualizarJugadores(FILE *archJug, ArbolBin *indice, const tJugador *nuevo);
-int cmpIndxNombre(const void *a, const void *b);
+int cmpIndxApodo(const void *a, const void *b);
 
 int archivarIndice(FILE *archIndx, char *nombreArch, ArbolBin *arbolIndx);
 void guardNodoIndxEnArchivo(void *dato, size_t tam, unsigned nivel, void *params);
+void mostrarIndxArch (void *a, const void *b);
 
 int buscarJugador(char *nombre, ArbolBin *indice, cmp Cmp);
 
 /////////Funciones de Ranking///////////
 int crearRanking(tLista *ranking, FILE* archPart, ArbolBin *indice, FILE *archJug);
 void cargarRanking(void *ranking, const void *dato);
-int cmpRankNombres(const void*a, const void *b);
+void cargarNombres(void *dato, void *contexto, void *param);
+
+int cmpRankUsuarios(const void*a, const void *b);
 int sumarRankPuntos(void **dato1, unsigned *tam1, const void* dato2, unsigned tam2);
 int cmpRankPuntos(const void *a, const void *b);
 
-int actualizarRegistroPartidas(FILE* arch, tLista *ranking, const tRegistroPartida *partida);
+int actualizarRegistroPartidas(tArchivos archivos, ArbolBin *indice, tLista *ranking, const tRegistroPartida *partida);
 void mostrarListaRanking(tLista *ranking);
 void mostrarRanking(const void *ranking, void* param);
 
@@ -174,4 +180,5 @@ int finCerrarArchivos(tArchivos *archivos);
 void mostrarIndx(void *dato, size_t tam, unsigned nivel, void *params);
 void mostrarPartidas(void *a, const void *b);
 void mostrarJugadores(void *a, const void *b);
+void crearPruebas();
 #endif

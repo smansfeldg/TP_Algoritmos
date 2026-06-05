@@ -24,6 +24,7 @@ int insertarNodoRecArbolBin(ArbolBin *arbol, const void* dato, const size_t tam,
 int insertarNodoArbolBin(ArbolBin *arbol, const void* dato, const size_t tam, int (*cmp)(const void* a, const void* b));
 int cargarElementosOrdenadosArbolBin(ArbolBin *arbol, void *datos, int lim_izq, int lim_der, void* params, size_t (*leer)(void **elementos, void *datos, unsigned posicion, void *params));
 void recorrerEnOrdenArbolBin(ArbolBin *arbol, unsigned nivel, void* params, void (*accion)(void* dato, size_t tam, unsigned nivel, void* params));
+void recorrerPreOrdenArbolBin(ArbolBin *arbol, unsigned nivel, void* params, void (*accion)(void* dato, size_t tam, unsigned nivel, void* params));
 int eliminarElementoArbolBin(ArbolBin *arbol, void* elemento, size_t tam, int (*cmp)(const void* a, const void* b));
 int eliminarRaizArbolBin(ArbolBin *arbol);
 NodoRaiz* buscarNodoArbolBin(const ArbolBin *arbol, void* elemento, int (*cmp)(const void* a, const void* b));
