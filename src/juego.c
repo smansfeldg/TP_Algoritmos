@@ -135,46 +135,53 @@ void mostrarReglas()
 
 int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
 {
+  char usuario[MAX_NOMBRE];
   char nombre[MAX_NOMBRE];
   char respuesta[16];
   int existe;
-  tIndice buscado;
-  NodoRaiz *nodo;
+  tJugador auxJug;
 
   do {
-    printf("\nIngrese su nombre de jugador: ");
-    leerLinea(nombre, MAX_NOMBRE);
+    printf("\nIngrese su usuario: ");
+    leerLinea(usuario, MAX_NOMBRE);
     // Si el usuario no ingresa un nombre, se asigna uno por defecto.
-    if (strlen(nombre) == 0) {
-      strcpy(nombre, "Jugador1");
+    if (strlen(usuario) == 0) {
+      strcpy(usuario, "Jugador1");
     }
 
-    // Se busca si ya existe un jugador con ese nombre en el indice.
-    existe = buscarJugador(nombre, indice, cmpIndxNombre);
-    if (existe) {
+    // Se busca si ya existe un jugador con ese nombre en el indice. -1 Es que no existe
+    existe = buscarJugador(usuario, indice, cmpIndxApodo);
+    if (existe != -1) {
       // Si ya existe, se confirma si quiere retomar ese usuario.
-      printf("\nEse nombre ya existe. Es tu usuario? (S/N): ");
+      printf("\nEse usuario ya existe. Es tu usuario? (S/N): ");
       leerLinea(respuesta, sizeof(respuesta));
       respuesta[0] = (char)toupper((unsigned char)respuesta[0]);
       if (respuesta[0] != 'S') {
-        puts("Ese nombre esta en uso, por favor elija otro.");
+        puts("Ese Apodo esta en uso, por favor elija otro.");
       }
     }
-  } while (existe && respuesta[0] != 'S');
-
-  crearJugador(&juego->jugador, nombre, 1, juego->config.vidasIniciales);
-
-  // Si el jugador ya existe, se carga su ID para actualizar su registro al finalizar la partida.
-  if (existe) {
-    strcpy(buscado.nombre, nombre);
-    nodo = buscarNodoArbolBin(indice, &buscado, cmpIndxNombre);
-    if (nodo) {
-      juego->jugador.idJugador = (int)((tIndice *)nodo->dato)->registro;
+    // Si no existe, pregunta por el nombre del dueño del nuevo usuario
+    else
+    {
+        do
+        {
+            printf("\nUsuario: %s - Disponible.", usuario);
+            printf("\nPor favor, ingrese su nombre para saber a quien le pertenece: ");
+            leerLinea(nombre, MAX_NOMBRE);
+        }while(strlen(nombre) == 0);
     }
+  } while (existe !=-1 && respuesta[0] != 'S');
+
+  crearJugador(&juego->jugador, nombre, usuario, 1, juego->config.vidasIniciales);
+
+  // Si el jugador ya existe, se carga el Nombre del individuo.
+  if (existe!=-1) {
+        leerPos(archJug,&auxJug,sizeof(tRegistroJugador),existe);
+        strncpy(juego->jugador.nombre,auxJug.nombre,MAX_NOMBRE-1);
+        juego->jugador.nombre[MAX_NOMBRE]='\0';
+
   } else {
-    // Si es un usuario nuevo, se asigna el siguiente ID disponible y se guarda en archivos.
-    fseek(archJug, 0, SEEK_END);
-    juego->jugador.idJugador = (int)(ftell(archJug) / sizeof(tRegistroJugador)) + 1;
+    // Si es un usuario nuevo, se guarda en archivos.
     actualizarJugadores(archJug, indice, &juego->jugador);
   }
 
@@ -280,7 +287,7 @@ int procesarMovimientoJugador(tJuego *juego)
   return 1;
 }
 
-void accionarBandido(void *bandido, void *contexto)
+void accionarBandido(void *bandido, void *contexto, void *extra)
 {
   tJuego *juego = (tJuego *)contexto;
   tMovimiento nueMov;
@@ -291,7 +298,7 @@ void accionarBandido(void *bandido, void *contexto)
 
   if (!bandidoActual->activo) return;
 
-  // Cada bandido tira un dado en su turno para definir cuantas casillas se mueve. 
+  // Cada bandido tira un dado en su turno para definir cuantas casillas se mueve.
   nueMov.pasos = lanzarDado();
   nueMov.entidad = bandidoActual;
 
@@ -311,7 +318,7 @@ void accionarBandido(void *bandido, void *contexto)
 
 int procesarMovimientoBandidos(tJuego *juego)
 {
-  recorrerListaYAccionar(&juego->bandidos, juego, accionarBandido);
+  recorrerListaYAccionar(&juego->bandidos, juego, NULL, accionarBandido);
   return 1;
 }
 

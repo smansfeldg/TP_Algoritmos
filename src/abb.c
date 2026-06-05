@@ -126,6 +126,15 @@ void recorrerEnOrdenArbolBin(ArbolBin *arbol, unsigned nivel, void* params, void
   recorrerEnOrdenArbolBin(&(*arbol)->nodoDer,nivel+1,params,accion);
 }
 
+void recorrerPreOrdenArbolBin(ArbolBin *arbol, unsigned nivel, void* params, void (*accion)(void* dato, size_t tam, unsigned nivel, void* params)){
+  if(!(*arbol)){
+    return;
+  }
+  accion((*arbol)->dato,(*arbol)->tam,nivel,params);
+  recorrerPreOrdenArbolBin(&(*arbol)->nodoIzq,nivel+1,params,accion);
+  recorrerPreOrdenArbolBin(&(*arbol)->nodoDer,nivel+1,params,accion);
+}
+
 int eliminarRaizArbolBin(ArbolBin *arbol){
   NodoRaiz *aux;
 
