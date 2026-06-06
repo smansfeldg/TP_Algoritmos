@@ -136,12 +136,12 @@ void mostrarReglas()
 
 /* Escanea el archivo de jugadores y muestra todos los usuarios cuyo nombre
    coincide con el dado. Util cuando varios usuarios tienen el mismo nombre real. */
-static void listarUsuariosConMismoNombre(FILE *archJug, const char *nombre)
+static int listarUsuariosConMismoNombre(FILE *archJug, const char *nombre)
 {
     tRegistroJugador reg;
     int encontrado = 0;
 
-    if (!archJug || !nombre || strlen(nombre) == 0) return;
+    if (!archJug || !nombre || strlen(nombre) == 0) return 0;
 
     fseek(archJug, 0, SEEK_SET);
     while (fread(&reg, sizeof(tRegistroJugador), 1, archJug) == 1) {
@@ -156,6 +156,7 @@ static void listarUsuariosConMismoNombre(FILE *archJug, const char *nombre)
     if (encontrado) {
         puts("Si alguno es tuyo, ingresa con ese usuario en lugar de crear uno nuevo.");
     }
+    return encontrado;
 }
 int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
 {
@@ -166,11 +167,18 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
   tJugador auxJug;
 
   do {
-    printf("\nIngrese su usuario: ");
+    printf("\nIngrese su usuario (o presione Enter para generar uno "
+           "automatico): ");
     leerLinea(usuario, MAX_NOMBRE);
     // Si el usuario no ingresa un nombre, se asigna uno por defecto.
     if (strlen(usuario) == 0) {
-      strcpy(usuario, "Jugador1");
+      // Se busca si ya existe un jugador con ese nombre en el indice. -1 Es que no existe
+      int cont = 1;
+      do {
+        sprintf(usuario, "Jugador%d", cont);
+        existe = buscarJugador(usuario, indice, cmpIndxApodo);
+        cont++;
+      }while(existe != -1);
     }
 
     // Se busca si ya existe un jugador con ese nombre en el indice. -1 Es que no existe
@@ -193,8 +201,21 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
             printf("\nPor favor, ingrese su nombre para saber a quien le pertenece: ");
             leerLinea(nombre, MAX_NOMBRE);
         }while(strlen(nombre) == 0);
-        /* Si el nombre ya existe en el sistema, listar los usuarios que lo tienen */
-        listarUsuariosConMismoNombre(archJug, nombre);
+        /* Si el nombre ya existe en el sistema, listar los usuarios que lo tienen y preguntar */
+        if (listarUsuariosConMismoNombre(archJug, nombre)) {
+            printf("\n¿Deseas usar alguno de los usuarios existentes listados arriba? (S/N): ");
+            char opc[16];
+            leerLinea(opc, sizeof(opc));
+            opc[0] = (char)toupper((unsigned char)opc[0]);
+            if (opc[0] == 'S') {
+                existe = 1; /* Forzar repeticion del bucle */
+                respuesta[0] = 'N';
+            } else {
+                respuesta[0] = 'S'; /* Continuar con la creacion del nuevo usuario */
+            }
+        } else {
+            respuesta[0] = 'S';
+        }
     }
   } while (existe !=-1 && respuesta[0] != 'S');
 
@@ -456,3 +477,4 @@ void mostrarFinJuego(int estado, const tJuego *j)
            j->jugador.nombre);
   }
 }
+
