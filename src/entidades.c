@@ -355,6 +355,35 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *c
     return verificarColision(juego, b, casillaActual);
 }
 
+/* Reubica en la posicion 2 a todo bandido activo que se encuentre en el inicio (posicion 1).
+   Debe llamarse antes de posicionarJugador(1) para que el jugador no reaparezca
+   en una casilla ocupada por un bandido, segun aclaracion de clase. */
+static void moverBandidoFueraDeInicio(void *bandido, void *contexto, void *extra)
+{
+    tBandido *b = (tBandido *)bandido;
+    tJuego *juego = (tJuego *)contexto;
+    tCasilla *casilla;
+    (void)extra;
+
+    if (!b->activo || b->posicion != 1) return;
+
+    /* Quitar al bandido de la casilla inicio */
+    casilla = buscarCasilla(&juego->tablero, 1, cmpPosCasillas);
+    if (casilla && casilla->bandidos > 0) {
+        casilla->bandidos--;
+        actualizarNormalCasilla(casilla);
+    }
+
+    /* Moverlo a la posicion 2 (primera casilla segura luego del inicio) */
+    b->posicion = 2;
+    casilla = buscarCasilla(&juego->tablero, 2, cmpPosCasillas);
+    if (casilla) {
+        casilla->bandidos++;
+        actualizarNormalCasilla(casilla);
+    }
+    puts("Un bandido fue reubicado fuera del inicio para que el jugador pueda reaparecer.");
+}
+
 int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual)
 {
     // Solo hay choque real si el bandido sigue activo y coincide con la posicion del jugador.
@@ -386,6 +415,9 @@ int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual)
     if (juego->jugador.vidas <= 0) {
         return -1;
     }
+
+    /* Antes de reaparecer, reubicar cualquier bandido activo que este en el inicio. */
+    recorrerListaYAccionar(&juego->bandidos, juego, NULL, moverBandidoFueraDeInicio);
 
     // El jugador vuelve al campamento inicial y se revisan colisiones en esa casilla.
     if (!posicionarJugador(juego, 1)) {
