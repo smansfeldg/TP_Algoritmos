@@ -226,14 +226,15 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
     }
 
     // El oasis da proteccion temporal contra la proxima tormenta o intercepcion.
+    // El oasis permanece en el tablero al ser pisado (no desaparece).
     if (casilla->oasis) {
         j->protegidoOasis = 1;
         obtuvoOasis = 1;
         puts("El jugador descansa en un oasis y estara protegido hasta su proximo turno.");
-        casilla->oasis = 0;
     }
 
     // La tormenta puede quitar la proteccion o forzar a perder un turno.
+    // La tormenta permanece en el tablero al ser pisada (no desaparece).
     if (casilla->tormenta) {
         if (j->protegidoOasis && !obtuvoOasis) {
             j->protegidoOasis = 0;
@@ -244,7 +245,6 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
             puts("El jugador pierde el proximo turno debido a una tormenta de arena.");
             j->perdidoTurno = 1;
         }
-        casilla->tormenta = 0;
     }
 
     // Las casillas de vida suman vidas al contador del jugador.
