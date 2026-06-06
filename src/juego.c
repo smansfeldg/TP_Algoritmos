@@ -133,6 +133,31 @@ void mostrarReglas()
   puts("Si sobrepasa la Ciudad Refugio, rebota con los pasos sobrantes. Los bandidos se mueven en una ruta circular e intentan interceptarlo.\n");
 }
 
+
+/* Escanea el archivo de jugadores y muestra todos los usuarios cuyo nombre
+   coincide con el dado. Util cuando varios usuarios tienen el mismo nombre real. */
+static int listarUsuariosConMismoNombre(FILE *archJug, const char *nombre)
+{
+    tRegistroJugador reg;
+    int encontrado = 0;
+
+    if (!archJug || !nombre || strlen(nombre) == 0) return 0;
+
+    fseek(archJug, 0, SEEK_SET);
+    while (fread(&reg, sizeof(tRegistroJugador), 1, archJug) == 1) {
+        if (strcmp(reg.nombre, nombre) == 0) {
+            if (!encontrado) {
+                printf("Aviso: el nombre '%s' ya pertenece a los siguientes usuarios:\n", nombre);
+                encontrado = 1;
+            }
+            printf("  -> %s\n", reg.usuario);
+        }
+    }
+    if (encontrado) {
+        puts("Si alguno es tuyo, ingresa con ese usuario en lugar de crear uno nuevo.");
+    }
+    return encontrado;
+}
 int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
 {
   char usuario[MAX_NOMBRE];
@@ -142,11 +167,18 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
   tJugador auxJug;
 
   do {
-    printf("\nIngrese su usuario: ");
+    printf("\nIngrese su usuario (o presione Enter para generar uno "
+           "automatico): ");
     leerLinea(usuario, MAX_NOMBRE);
     // Si el usuario no ingresa un nombre, se asigna uno por defecto.
     if (strlen(usuario) == 0) {
-      strcpy(usuario, "Jugador1");
+      // Se busca si ya existe un jugador con ese nombre en el indice. -1 Es que no existe
+      int cont = 1;
+      do {
+        sprintf(usuario, "Jugador%d", cont);
+        existe = buscarJugador(usuario, indice, cmpIndxApodo);
+        cont++;
+      }while(existe != -1);
     }
 
     // Se busca si ya existe un jugador con ese nombre en el indice. -1 Es que no existe
@@ -160,7 +192,7 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
         puts("Ese Apodo esta en uso, por favor elija otro.");
       }
     }
-    // Si no existe, pregunta por el nombre del due�o del nuevo usuario
+    // Si no existe, pregunta por el nombre del dueño del nuevo usuario
     else
     {
         do
@@ -169,6 +201,21 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
             printf("\nPor favor, ingrese su nombre para saber a quien le pertenece: ");
             leerLinea(nombre, MAX_NOMBRE);
         }while(strlen(nombre) == 0);
+        /* Si el nombre ya existe en el sistema, listar los usuarios que lo tienen y preguntar */
+        if (listarUsuariosConMismoNombre(archJug, nombre)) {
+            printf("\n¿Deseas usar alguno de los usuarios existentes listados arriba? (S/N): ");
+            char opc[16];
+            leerLinea(opc, sizeof(opc));
+            opc[0] = (char)toupper((unsigned char)opc[0]);
+            if (opc[0] == 'S') {
+                existe = 1; /* Forzar repeticion del bucle */
+                respuesta[0] = 'N';
+            } else {
+                respuesta[0] = 'S'; /* Continuar con la creacion del nuevo usuario */
+            }
+        } else {
+            respuesta[0] = 'S';
+        }
     }
   } while (existe !=-1 && respuesta[0] != 'S');
 
@@ -364,6 +411,7 @@ int ejecutarTurno(tJuego *juego)
   // Luego se preparan los movimientos de los bandidos para este mismo turno.
   procesarMovimientoBandidos(juego);
 
+  int movio = 0;
   if (!juego->jugador.perdidoTurno) {
     // Se ejecuta el movimiento elegido por el jugador.
     desencolarMovimiento(&juego->colaMovimientos, &nuevoMovimiento);
@@ -373,6 +421,7 @@ int ejecutarTurno(tJuego *juego)
       return 0;
     }
     juego->totalMovimientos++;
+    movio = 1;
   } else {
     // La penalizacion solo dura un turno.
     juego->jugador.perdidoTurno = 0;
@@ -380,14 +429,17 @@ int ejecutarTurno(tJuego *juego)
 
   // Una vez movido, se identifica la casilla para aplicar efectos del terreno.
   casillaActualJugador = buscarCasilla(&juego->tablero, juego->jugador.posicion, cmpPosCasillas);
-  printf("\nLlegaste a la posicion %d: %s\n",
-         juego->jugador.posicion,
-         descripcionCasilla(casillaActualJugador));
+  
+  if (movio) {
+    printf("\nLlegaste a la posicion %d: %s\n",
+           juego->jugador.posicion,
+           descripcionCasilla(casillaActualJugador));
 
-  // Las casillas especiales pueden terminar la partida o modificar el estado del jugador.
-  if (aplicarEfectoCasilla(&juego->jugador, casillaActualJugador)) {
-    juego->juegoActivo = 0;
-    return 2;
+    // Las casillas especiales pueden terminar la partida o modificar el estado del jugador.
+    if (aplicarEfectoCasilla(&juego->jugador, casillaActualJugador)) {
+      juego->juegoActivo = 0;
+      return 2;
+    }
   }
 
   // Si los efectos dejaron al jugador sin vidas, la partida termina.
@@ -430,3 +482,4 @@ void mostrarFinJuego(int estado, const tJuego *j)
            j->jugador.nombre);
   }
 }
+

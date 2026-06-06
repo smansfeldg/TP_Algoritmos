@@ -157,8 +157,11 @@ int generarTablero(tJuego *juego, const tConfiguracion *cfg)
         actualizarNormalCasilla(&casillas[pos]);
     }
 
+    /* Regla: los bandidos nunca se generan en inicio (indice 0, posicion 1)
+       ni en el refugio (indice N-1, posicion N). La formula produce indices
+       de array 1..N-2, equivalente a posiciones de juego 2..N-1. */
     for (c = 0; c < cfg->cantidadBandidos; c++) {
-        int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
+        int pos = (rand() % (cfg->totalCasillas - 2)) + 1; /* indices: 1..N-2 */
         casillas[pos].bandidos++;
         actualizarNormalCasilla(&casillas[pos]);
         crearBandido(&bandidoAux, c + 1, pos + 1);
@@ -220,31 +223,41 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
 {
     int obtuvoOasis = 0;
 
+    /* PRIORIDAD DE EFECTOS:
+       1. Refugio  → termina la partida (victoria).
+       2. Oasis    → otorga proteccion; tiene prioridad sobre todos los efectos negativos.
+       3. Tormenta → bloqueada si el jugador obtuvo oasis esta o la vuelta anterior.
+       4. Vidas / Premios → se recogen siempre (efectos positivos, desaparecen al ser tomados).
+       Bandidos: su colision se resuelve en verificarColision, donde tambien se respeta la
+       proteccion del oasis. */
+
     // La Ciudad Refugio termina la partida de forma inmediata.
     if (casilla->refugio) {
         return 1;
     }
 
     // El oasis da proteccion temporal contra la proxima tormenta o intercepcion.
+    // El oasis permanece en el tablero al ser pisado (no desaparece).
+    // Se evalua primero para que la proteccion este activa al procesar tormenta.
     if (casilla->oasis) {
         j->protegidoOasis = 1;
         obtuvoOasis = 1;
         puts("El jugador descansa en un oasis y estara protegido hasta su proximo turno.");
-        casilla->oasis = 0;
     }
 
     // La tormenta puede quitar la proteccion o forzar a perder un turno.
+    // La tormenta permanece en el tablero al ser pisada (no desaparece).
+    // El oasis pesa mas: si hay oasis en esta casilla, la tormenta no tiene efecto.
     if (casilla->tormenta) {
         if (j->protegidoOasis && !obtuvoOasis) {
             j->protegidoOasis = 0;
             puts("El jugador fue protegido de la tormenta por el oasis.");
         } else if (obtuvoOasis) {
-            puts("El oasis protege al jugador de la tormenta y conserva la proteccion para el proximo turno.");
+            puts("El oasis neutraliza la tormenta; la proteccion se mantiene para el proximo turno.");
         } else {
             puts("El jugador pierde el proximo turno debido a una tormenta de arena.");
             j->perdidoTurno = 1;
         }
-        casilla->tormenta = 0;
     }
 
     // Las casillas de vida suman vidas al contador del jugador.
@@ -352,6 +365,35 @@ int moverBandido(tJuego *juego, tBandido *b, tMovimiento movimiento, tCasilla *c
     return verificarColision(juego, b, casillaActual);
 }
 
+/* Reubica en la posicion 2 a todo bandido activo que se encuentre en el inicio (posicion 1).
+   Debe llamarse antes de posicionarJugador(1) para que el jugador no reaparezca
+   en una casilla ocupada por un bandido, segun aclaracion de clase. */
+static void moverBandidoFueraDeInicio(void *bandido, void *contexto, void *extra)
+{
+    tBandido *b = (tBandido *)bandido;
+    tJuego *juego = (tJuego *)contexto;
+    tCasilla *casilla;
+    (void)extra;
+
+    if (!b->activo || b->posicion != 1) return;
+
+    /* Quitar al bandido de la casilla inicio */
+    casilla = buscarCasilla(&juego->tablero, 1, cmpPosCasillas);
+    if (casilla && casilla->bandidos > 0) {
+        casilla->bandidos--;
+        actualizarNormalCasilla(casilla);
+    }
+
+    /* Moverlo a la posicion 2 (primera casilla segura luego del inicio) */
+    b->posicion = 2;
+    casilla = buscarCasilla(&juego->tablero, 2, cmpPosCasillas);
+    if (casilla) {
+        casilla->bandidos++;
+        actualizarNormalCasilla(casilla);
+    }
+    puts("Un bandido fue reubicado fuera del inicio para que el jugador pueda reaparecer.");
+}
+
 int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual)
 {
     // Solo hay choque real si el bandido sigue activo y coincide con la posicion del jugador.
@@ -383,6 +425,9 @@ int verificarColision(tJuego *juego, tBandido *b, tCasilla *casillaActual)
     if (juego->jugador.vidas <= 0) {
         return -1;
     }
+
+    /* Antes de reaparecer, reubicar cualquier bandido activo que este en el inicio. */
+    recorrerListaYAccionar(&juego->bandidos, juego, NULL, moverBandidoFueraDeInicio);
 
     // El jugador vuelve al campamento inicial y se revisan colisiones en esa casilla.
     if (!posicionarJugador(juego, 1)) {
