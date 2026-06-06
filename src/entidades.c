@@ -223,6 +223,14 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
 {
     int obtuvoOasis = 0;
 
+    /* PRIORIDAD DE EFECTOS:
+       1. Refugio  → termina la partida (victoria).
+       2. Oasis    → otorga proteccion; tiene prioridad sobre todos los efectos negativos.
+       3. Tormenta → bloqueada si el jugador obtuvo oasis esta o la vuelta anterior.
+       4. Vidas / Premios → se recogen siempre (efectos positivos, desaparecen al ser tomados).
+       Bandidos: su colision se resuelve en verificarColision, donde tambien se respeta la
+       proteccion del oasis. */
+
     // La Ciudad Refugio termina la partida de forma inmediata.
     if (casilla->refugio) {
         return 1;
@@ -230,6 +238,7 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
 
     // El oasis da proteccion temporal contra la proxima tormenta o intercepcion.
     // El oasis permanece en el tablero al ser pisado (no desaparece).
+    // Se evalua primero para que la proteccion este activa al procesar tormenta.
     if (casilla->oasis) {
         j->protegidoOasis = 1;
         obtuvoOasis = 1;
@@ -238,12 +247,13 @@ int aplicarEfectoCasilla(tJugador *j, tCasilla *casilla)
 
     // La tormenta puede quitar la proteccion o forzar a perder un turno.
     // La tormenta permanece en el tablero al ser pisada (no desaparece).
+    // El oasis pesa mas: si hay oasis en esta casilla, la tormenta no tiene efecto.
     if (casilla->tormenta) {
         if (j->protegidoOasis && !obtuvoOasis) {
             j->protegidoOasis = 0;
             puts("El jugador fue protegido de la tormenta por el oasis.");
         } else if (obtuvoOasis) {
-            puts("El oasis protege al jugador de la tormenta y conserva la proteccion para el proximo turno.");
+            puts("El oasis neutraliza la tormenta; la proteccion se mantiene para el proximo turno.");
         } else {
             puts("El jugador pierde el proximo turno debido a una tormenta de arena.");
             j->perdidoTurno = 1;
