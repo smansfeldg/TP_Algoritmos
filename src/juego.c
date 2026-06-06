@@ -133,6 +133,30 @@ void mostrarReglas()
   puts("Si sobrepasa la Ciudad Refugio, rebota con los pasos sobrantes. Los bandidos se mueven en una ruta circular e intentan interceptarlo.\n");
 }
 
+
+/* Escanea el archivo de jugadores y muestra todos los usuarios cuyo nombre
+   coincide con el dado. Util cuando varios usuarios tienen el mismo nombre real. */
+static void listarUsuariosConMismoNombre(FILE *archJug, const char *nombre)
+{
+    tRegistroJugador reg;
+    int encontrado = 0;
+
+    if (!archJug || !nombre || strlen(nombre) == 0) return;
+
+    fseek(archJug, 0, SEEK_SET);
+    while (fread(&reg, sizeof(tRegistroJugador), 1, archJug) == 1) {
+        if (strcmp(reg.nombre, nombre) == 0) {
+            if (!encontrado) {
+                printf("Aviso: el nombre '%s' ya pertenece a los siguientes usuarios:\n", nombre);
+                encontrado = 1;
+            }
+            printf("  -> %s\n", reg.usuario);
+        }
+    }
+    if (encontrado) {
+        puts("Si alguno es tuyo, ingresa con ese usuario en lugar de crear uno nuevo.");
+    }
+}
 int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
 {
   char usuario[MAX_NOMBRE];
@@ -169,6 +193,8 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
             printf("\nPor favor, ingrese su nombre para saber a quien le pertenece: ");
             leerLinea(nombre, MAX_NOMBRE);
         }while(strlen(nombre) == 0);
+        /* Si el nombre ya existe en el sistema, listar los usuarios que lo tienen */
+        listarUsuariosConMismoNombre(archJug, nombre);
     }
   } while (existe !=-1 && respuesta[0] != 'S');
 
