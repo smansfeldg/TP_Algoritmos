@@ -157,8 +157,11 @@ int generarTablero(tJuego *juego, const tConfiguracion *cfg)
         actualizarNormalCasilla(&casillas[pos]);
     }
 
+    /* Regla: los bandidos nunca se generan en inicio (indice 0, posicion 1)
+       ni en el refugio (indice N-1, posicion N). La formula produce indices
+       de array 1..N-2, equivalente a posiciones de juego 2..N-1. */
     for (c = 0; c < cfg->cantidadBandidos; c++) {
-        int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
+        int pos = (rand() % (cfg->totalCasillas - 2)) + 1; /* indices: 1..N-2 */
         casillas[pos].bandidos++;
         actualizarNormalCasilla(&casillas[pos]);
         crearBandido(&bandidoAux, c + 1, pos + 1);
