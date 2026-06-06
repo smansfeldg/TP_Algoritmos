@@ -548,7 +548,7 @@ int IndexarArchivoOrdenado(FILE *archIndx, char *nombreArch, ArbolBin *arbolIndx
     (void)archIndx;
 
     crearArbolBin(arbolIndx);
-    if (abrirArchivo(&archIndx, nombreArch, "rb", 0) == 0) {
+    if (abrirArchivo(&archIndx, nombreArch, "a+b", 0) == 0) {
         return 0;
     }
     fseek(archIndx,0,SEEK_END);
@@ -733,7 +733,7 @@ int actualizarRegistroPartidas(tArchivos archivos, ArbolBin *indice, tLista *ran
 
     nuevo.cantidadPartidas = 1;
     nuevo.puntuacionTotal = partida->puntuacion;
-    insertarEnOrden(ranking, &nuevo, sizeof(tRegistroRanking), cmpRankPuntos, sumarRankPuntos);
+    insertarEnOrden(ranking, &nuevo, sizeof(tRegistroRanking), cmpRankUsuarios, sumarRankPuntos);
 
     return 1;
 }
@@ -766,13 +766,12 @@ void mostrarRanking(const void *reg, void *param)
 
 int inicioAbrirArchivos(tArchivos *archivos)
 {
-    if (abrirArchivo(&archivos->archJug, ARCH_JUGADORES, "r+b", 0) == 0 &&
-        abrirArchivo(&archivos->archJug, ARCH_JUGADORES, "w+b", 0) == 0) {
+
+    if (abrirArchivo(&archivos->archJug, ARCH_JUGADORES, "a+b", 0) == 0) {
         return 0;
     }
 
-    if (abrirArchivo(&archivos->archPart, ARCH_PARTIDAS, "r+b", 0) == 0 &&
-        abrirArchivo(&archivos->archPart, ARCH_PARTIDAS, "w+b", 0) == 0) {
+    if (abrirArchivo(&archivos->archPart, ARCH_PARTIDAS, "a+b", 0) == 0) {
         cerrarArchivo(&archivos->archJug, ARCH_JUGADORES, 0);
         return 0;
     }
