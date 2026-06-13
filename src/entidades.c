@@ -117,7 +117,7 @@ int generarTablero(tJuego *juego, const tConfiguracion *cfg)
     tBandido bandidoAux;
     tCasilla *casillas;
     int i;
-    int c;
+    int c=0;
 
     casillas = (tCasilla *)calloc(cfg->totalCasillas, sizeof(tCasilla));
     if (!casillas) return 0;
@@ -133,10 +133,15 @@ int generarTablero(tJuego *juego, const tConfiguracion *cfg)
     casillas[cfg->totalCasillas - 1].refugio = 1;
     casillas[cfg->totalCasillas - 1].normal = 0;
 
-    for (c = 0; c < cfg->cantidadOasis; c++) {
+    while(c < cfg->cantidadOasis)
+    {
         int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
-        casillas[pos].oasis = 1;
-        actualizarNormalCasilla(&casillas[pos]);
+        if(casillas[pos].oasis != 1 && casillas[pos].tormenta != 1)
+        {
+            casillas[pos].oasis = 1;
+            actualizarNormalCasilla(&casillas[pos]);
+            c++;
+        }
     }
 
     for (c = 0; c < cfg->cantidadPremios; c++) {
@@ -145,10 +150,16 @@ int generarTablero(tJuego *juego, const tConfiguracion *cfg)
         actualizarNormalCasilla(&casillas[pos]);
     }
 
-    for (c = 0; c < cfg->cantidadTormentas; c++) {
+    c=0;
+    while(c < cfg->cantidadTormentas)
+    {
         int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
-        casillas[pos].tormenta = 1;
-        actualizarNormalCasilla(&casillas[pos]);
+        if(casillas[pos].oasis != 1 && casillas[pos].tormenta != 1)
+        {
+            casillas[pos].tormenta = 1;
+            actualizarNormalCasilla(&casillas[pos]);
+            c++;
+        }
     }
 
     for (c = 0; c < cfg->cantidadVidas; c++) {
