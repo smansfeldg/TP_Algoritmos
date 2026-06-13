@@ -170,9 +170,9 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
     printf("\nIngrese su usuario (o presione Enter para generar uno "
            "automatico): ");
     leerLinea(usuario, MAX_NOMBRE);
-    // Si el usuario no ingresa un nombre, se asigna uno por defecto.
+    // Si no se ingresa un usuario, se asigna uno por defecto.
     if (strlen(usuario) == 0) {
-      // Se busca si ya existe un jugador con ese nombre en el indice. -1 Es que no existe
+      // Se busca si ya existe un jugador con ese usuario en el indice. -1 Es que no existe
       int cont = 1;
       do {
         sprintf(usuario, "Jugador%d", cont);
@@ -181,15 +181,19 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
       }while(existe != -1);
     }
 
-    // Se busca si ya existe un jugador con ese nombre en el indice. -1 Es que no existe
+    // Se busca si ya existe un jugador con ese usuario en el indice. -1 Es que no existe
     existe = buscarJugador(usuario, indice, cmpIndxApodo);
-    if (existe != -1) {
-      // Si ya existe, se confirma si quiere retomar ese usuario.
-      printf("\nEse usuario ya existe. Es tu usuario? (S/N): ");
-      leerLinea(respuesta, sizeof(respuesta));
-      respuesta[0] = (char)toupper((unsigned char)respuesta[0]);
-      if (respuesta[0] != 'S') {
-        puts("Ese Apodo esta en uso, por favor elija otro.");
+    if (existe != -1)
+    {
+        leerPos(archJug,&auxJug,sizeof(tRegistroJugador),existe);
+        strncpy(juego->jugador.nombre,auxJug.nombre,MAX_NOMBRE-1);
+        juego->jugador.nombre[MAX_NOMBRE]='\0';
+        // Si ya existe, se confirma si quiere retomar ese usuario.
+        printf("\n<%s> ya existe, y pertenece a <%s>. Es este tu usuario? (S/N): ",auxJug.usuario,auxJug.nombre);
+        leerLinea(respuesta, sizeof(respuesta));
+        respuesta[0] = (char)toupper((unsigned char)respuesta[0]);
+        if (respuesta[0] != 'S') {
+            puts("Ese Apodo esta en uso, por favor elija otro.");
       }
     }
     // Si no existe, pregunta por el nombre del dueño del nuevo usuario
@@ -201,33 +205,13 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
             printf("\nPor favor, ingrese su nombre para saber a quien le pertenece: ");
             leerLinea(nombre, MAX_NOMBRE);
         }while(strlen(nombre) == 0);
-        /* Si el nombre ya existe en el sistema, listar los usuarios que lo tienen y preguntar */
-        if (listarUsuariosConMismoNombre(archJug, nombre)) {
-            printf("\n¿Deseas usar alguno de los usuarios existentes listados arriba? (S/N): ");
-            char opc[16];
-            leerLinea(opc, sizeof(opc));
-            opc[0] = (char)toupper((unsigned char)opc[0]);
-            if (opc[0] == 'S') {
-                existe = 1; /* Forzar repeticion del bucle */
-                respuesta[0] = 'N';
-            } else {
-                respuesta[0] = 'S'; /* Continuar con la creacion del nuevo usuario */
-            }
-        } else {
-            respuesta[0] = 'S';
-        }
     }
   } while (existe !=-1 && respuesta[0] != 'S');
 
   crearJugador(&juego->jugador, nombre, usuario, 1, juego->config.vidasIniciales);
 
   // Si el jugador ya existe, se carga el Nombre del individuo.
-  if (existe!=-1) {
-        leerPos(archJug,&auxJug,sizeof(tRegistroJugador),existe);
-        strncpy(juego->jugador.nombre,auxJug.nombre,MAX_NOMBRE-1);
-        juego->jugador.nombre[MAX_NOMBRE]='\0';
-
-  } else {
+  if (existe==-1) {
     // Si es un usuario nuevo, se guarda en archivos.
     actualizarJugadores(archJug, indice, &juego->jugador);
   }
@@ -429,7 +413,7 @@ int ejecutarTurno(tJuego *juego)
 
   // Una vez movido, se identifica la casilla para aplicar efectos del terreno.
   casillaActualJugador = buscarCasilla(&juego->tablero, juego->jugador.posicion, cmpPosCasillas);
-  
+
   if (movio) {
     printf("\nLlegaste a la posicion %d: %s\n",
            juego->jugador.posicion,

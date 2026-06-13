@@ -21,12 +21,17 @@ int main()
 
     srand((unsigned)time(NULL));
 
-    if (!inicioAbrirArchivos(&archivosDelJuego)) {
+    int arch = inicioAbrirArchivos(&archivosDelJuego);
+    if (!arch) {
         puts("No se pudieron abrir los archivos de datos del juego.");
         return 1;
     }
 
-    IndexarArchivoOrdenado(archivosDelJuego.archIndice, ARCH_INDICE, &indice, sizeof(tIndice));
+    if(arch==1)
+        IndexarArchivoOrdenado(archivosDelJuego.archIndice, ARCH_INDICE, &indice, sizeof(tIndice));
+    else
+        indexarArchivoJugadores(archivosDelJuego.archJug,&indice);
+
     crearRanking(&ranking, archivosDelJuego.archPart, &indice, archivosDelJuego.archJug);
 
     mostrarBienvenida();
