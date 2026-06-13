@@ -7,7 +7,7 @@
 
 #define ARCH_JUGADORES "jugadores.bin"
 #define ARCH_PARTIDAS "partidas.bin"
-#define ARCH_INDICE "indice.bin"
+#define ARCH_INDICE "indice.idx"
 
 #define ERROR_ARCH -1
 #define ERROR_MEM -1

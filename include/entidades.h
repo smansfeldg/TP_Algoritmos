@@ -148,6 +148,7 @@ int cmpPosCasillas(const void *a, const void *b);
 
 
 /////////Funciones de Indice///////////
+void indexarArchivoJugadores(FILE *archJug, ArbolBin *indice);
 int IndexarArchivoOrdenado(FILE *archIndx, char *nombreArch, ArbolBin *arbolIndx, unsigned tam);
 size_t guardarIndiceEnNodo(void **arbo, void*arch, unsigned pos, void* param);
 

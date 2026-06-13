@@ -117,7 +117,7 @@ int generarTablero(tJuego *juego, const tConfiguracion *cfg)
     tBandido bandidoAux;
     tCasilla *casillas;
     int i;
-    int c;
+    int c=0;
 
     casillas = (tCasilla *)calloc(cfg->totalCasillas, sizeof(tCasilla));
     if (!casillas) return 0;
@@ -133,10 +133,15 @@ int generarTablero(tJuego *juego, const tConfiguracion *cfg)
     casillas[cfg->totalCasillas - 1].refugio = 1;
     casillas[cfg->totalCasillas - 1].normal = 0;
 
-    for (c = 0; c < cfg->cantidadOasis; c++) {
+    while(c < cfg->cantidadOasis)
+    {
         int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
-        casillas[pos].oasis = 1;
-        actualizarNormalCasilla(&casillas[pos]);
+        if(casillas[pos].oasis != 1 && casillas[pos].tormenta != 1)
+        {
+            casillas[pos].oasis = 1;
+            actualizarNormalCasilla(&casillas[pos]);
+            c++;
+        }
     }
 
     for (c = 0; c < cfg->cantidadPremios; c++) {
@@ -145,10 +150,16 @@ int generarTablero(tJuego *juego, const tConfiguracion *cfg)
         actualizarNormalCasilla(&casillas[pos]);
     }
 
-    for (c = 0; c < cfg->cantidadTormentas; c++) {
+    c=0;
+    while(c < cfg->cantidadTormentas)
+    {
         int pos = (rand() % (cfg->totalCasillas - 2)) + 1;
-        casillas[pos].tormenta = 1;
-        actualizarNormalCasilla(&casillas[pos]);
+        if(casillas[pos].oasis != 1 && casillas[pos].tormenta != 1)
+        {
+            casillas[pos].tormenta = 1;
+            actualizarNormalCasilla(&casillas[pos]);
+            c++;
+        }
     }
 
     for (c = 0; c < cfg->cantidadVidas; c++) {
@@ -587,15 +598,24 @@ int cmpPosCasillas(const void *a, const void *b)
     return cas1->posicion - cas2->posicion;
 }
 
+void indexarArchivoJugadores(FILE *archJug, ArbolBin *indice)
+{
+    tRegistroJugador auxJug;
+    tIndice auxIndx;
+    unsigned reg=0;
+    crearArbolBin(indice);
 
+    while(fread(&auxJug,sizeof(tRegistroJugador),1,archJug)==1)
+    {
+        auxIndx.registro=reg;
+        strcpy(auxIndx.usuario,auxJug.usuario);
+        insertarNodoArbolBin(indice, &auxIndx,sizeof(tIndice), cmpIndxApodo);
+        reg++;
+    }
+}
 int IndexarArchivoOrdenado(FILE *archIndx, char *nombreArch, ArbolBin *arbolIndx, unsigned tam)
 {
-    (void)archIndx;
-
     crearArbolBin(arbolIndx);
-    if (abrirArchivo(&archIndx, nombreArch, "a+b", 0) == 0) {
-        return 0;
-    }
     fseek(archIndx,0,SEEK_END);
     int cantReg=(ftell(archIndx)/tam)-1;
 
@@ -811,17 +831,88 @@ void mostrarRanking(const void *reg, void *param)
 
 int inicioAbrirArchivos(tArchivos *archivos)
 {
+    int existeJug=1;
 
-    if (abrirArchivo(&archivos->archJug, ARCH_JUGADORES, "a+b", 0) == 0) {
-        return 0;
+    if (abrirArchivo(&archivos->archJug, ARCH_JUGADORES, "r+b", 0) == -1)
+    {
+        //Si el archivo de jugadores no existe, crea uno nuevo en blanco.
+        if(errno == ENOENT)
+        {
+            existeJug = 0;
+            if (abrirArchivo(&archivos->archJug, ARCH_JUGADORES, "w+b", 0) == -1)
+                return 0;
+        }
+        //Si existe, pero no se puede abrir, devuelve error.
+        else
+            return 0;
     }
 
-    if (abrirArchivo(&archivos->archPart, ARCH_PARTIDAS, "a+b", 0) == 0) {
-        cerrarArchivo(&archivos->archJug, ARCH_JUGADORES, 0);
-        return 0;
+    //Si el archivo de jugadores se tuvo que crear de 0, crea archivos de partida e indice nuevos.
+    if(existeJug==0)
+    {
+        if (abrirArchivo(&archivos->archPart, ARCH_PARTIDAS, "w+b", 0) == -1)
+        {
+            cerrarArchivo(&archivos->archJug, ARCH_JUGADORES, 0);
+            return 0;
+        }
+        if (abrirArchivo(&archivos->archIndice, ARCH_INDICE, "w+b", 0) == -1)
+        {
+            cerrarArchivo(&archivos->archPart, ARCH_PARTIDAS, 0);
+            cerrarArchivo(&archivos->archJug, ARCH_JUGADORES, 0);
+            return 0;
+        }
     }
 
-    archivos->archIndice = NULL;
+
+    else
+    {
+        if (abrirArchivo(&archivos->archPart, ARCH_PARTIDAS, "r+b", 0) == -1)
+        {
+            //Si el archivo de partidas no existe, crea uno nuevo en blanco.
+            if(errno == ENOENT)
+            {
+                if (abrirArchivo(&archivos->archPart, ARCH_PARTIDAS, "w+b", 0) == -1)
+                {
+                    cerrarArchivo(&archivos->archJug, ARCH_JUGADORES, 0);
+                    return 0;
+                }
+            }
+            //Si existe, pero no se puede abrir, devuelve error.
+            else
+            {
+                cerrarArchivo(&archivos->archJug, ARCH_JUGADORES, 0);
+                return 0;
+            }
+        }
+
+
+        if (abrirArchivo(&archivos->archIndice, ARCH_INDICE, "rb", 0) == -1)
+        {
+            //Si el archivo de indice no existe, crea uno nuevo a partir de jugadores.
+            if(errno == ENOENT)
+            {
+                if (abrirArchivo(&archivos->archIndice, ARCH_INDICE, "w+b", 0) == -1)
+                {
+                    cerrarArchivo(&archivos->archPart, ARCH_PARTIDAS, 0);
+                    cerrarArchivo(&archivos->archJug, ARCH_JUGADORES, 0);
+                    return 0;
+                }
+                else
+                {
+                    cerrarArchivo(&archivos->archIndice, ARCH_INDICE, 0);
+                    archivos->archIndice=NULL;
+                    return 2;//Indica que hay que indexar el archivos de jugadores
+                }
+            }
+            //Si existe, pero no se puede abrir, devuelve error.
+            else
+            {
+                cerrarArchivo(&archivos->archPart, ARCH_PARTIDAS, 0);
+                cerrarArchivo(&archivos->archJug, ARCH_JUGADORES, 0);
+                return 0;
+            }
+        }
+    }
     return 1;
 }
 
