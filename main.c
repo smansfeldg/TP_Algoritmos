@@ -83,6 +83,17 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
 
     mostrarConfiguracion(&cfg);
     inicializarJuego(&juego, &cfg);
+
+    //Generar Tablero
+    do
+    {
+        generarTablero(&juego, &cfg);
+    }while(verificarTablero(&juego.tablero, &juego.config)!=1);
+    //Checkear si esta balanceado
+
+    //Si es pregenerado, cargarlo y verificarlo
+    //Si es necesario mostrar menu;
+
     iniciarPartida(&juego, archivosDelJuego->archJug, indice);
     limpiar_pantalla();
 
