@@ -186,8 +186,8 @@ int iniciarPartida(tJuego *juego, FILE *archJug, ArbolBin *indice)
     if (existe != -1)
     {
         leerPos(archJug,&auxJug,sizeof(tRegistroJugador),existe);
-        strncpy(juego->jugador.nombre,auxJug.nombre,MAX_NOMBRE-1);
-        juego->jugador.nombre[MAX_NOMBRE]='\0';
+        strncpy(nombre,auxJug.nombre,MAX_NOMBRE-1);
+        nombre[MAX_NOMBRE]='\0';
         // Si ya existe, se confirma si quiere retomar ese usuario.
         printf("\n<%s> ya existe, y pertenece a <%s>. Es este tu usuario? (S/N): ",auxJug.usuario,auxJug.nombre);
         leerLinea(respuesta, sizeof(respuesta));

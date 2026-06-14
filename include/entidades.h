@@ -77,6 +77,7 @@ typedef struct {
     int cantidadVidas;
     int cantidadOasis;
     int cantidadTormentas;
+    int mapaPregenerado;
 } tConfiguracion;
 
 typedef struct {
@@ -182,4 +183,10 @@ void mostrarIndx(void *dato, size_t tam, unsigned nivel, void *params);
 void mostrarPartidas(void *a, const void *b);
 void mostrarJugadores(void *a, const void *b);
 void crearPruebas();
+
+int verificarTablero(tLista *tablero, tConfiguracion *cfg);
+void incrementarCont(tConfiguracion *contador, tCasilla *actual);
+int verificarCasillaInicio (tCasilla *inicio);
+int verificarCasillaFin (tCasilla *fin);
+
 #endif

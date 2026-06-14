@@ -55,6 +55,7 @@ void inicializarConfiguracion(tConfiguracion *cfg)
     cfg->cantidadVidas = 2;
     cfg->cantidadOasis = 2;
     cfg->cantidadTormentas = 3;
+    cfg->mapaPregenerado=0;
 }
 
 int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
@@ -97,6 +98,8 @@ void trozarConfig(void *config, const void *dato)
         c->cantidadOasis = valor;
     } else if (claveIgual(parametro, "CANTIDAD_TORMENTAS") || claveIgual(parametro, "maximo_tormentas")) {
         c->cantidadTormentas = valor;
+    } else if (claveIgual(parametro, "MAPA_PREGENERADO") || claveIgual(parametro, "mapa_pregenerado")){
+        c->mapaPregenerado = valor;
     }
 }
 
@@ -119,6 +122,8 @@ int generarTablero(tJuego *juego, const tConfiguracion *cfg)
     int i;
     int c=0;
 
+    vaciarLista(&juego->bandidos);
+    vaciarLista(&juego->tablero);
     casillas = (tCasilla *)calloc(cfg->totalCasillas, sizeof(tCasilla));
     if (!casillas) return 0;
 
@@ -301,7 +306,7 @@ void inicializarJuego(tJuego *juego, tConfiguracion *cfg)
     juego->juegoActivo = 1;
     juego->turnoActual = 1;
 
-    generarTablero(juego, cfg);
+    //generarTablero(juego, cfg);
 }
 
 void liberarJuego(tJuego *juego)
@@ -495,7 +500,7 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
 {
     FILE *arch;
 
-    if(abrirArchivo(&arch,nombreArchivo,"rt",0)==0)
+    if(abrirArchivo(&arch,nombreArchivo,"rt",0)==-1)
         return 0;
     int c, i=0;
     int nroBand=0;
@@ -956,4 +961,133 @@ void mostrarIndxArch (void *a, const void *b)
     tIndice *indx = (tIndice *)b;
     (void)a;
     printf("Nombre: %s | Registro: %u\n", indx->usuario, indx->registro);
+}
+
+int verificarTablero(tLista *tablero, tConfiguracion *cfg)
+{
+    int desbalanceado=0;
+    const int invalido =-1;
+    tNodoListaC *NodoAct=*tablero;
+
+    //Verifico que inicio y fin existan y tengan el formato correcto
+    if(verificarCasillaInicio((tCasilla*)NodoAct->info)==0)
+        return invalido;
+
+    //Creo punteros al anterior y siguiente del nodo para revisar un area
+    tNodoListaC *nodoAnterior= NodoAct->ant, *nodoSiguiente=NodoAct->sig;
+
+    if(verificarCasillaFin((tCasilla*)nodoAnterior->info)==0)
+        return invalido;
+
+    NodoAct=NodoAct->sig;
+    nodoAnterior= nodoAnterior->sig;
+    nodoSiguiente=nodoSiguiente->sig;
+
+    //Parametros a medir
+    int bandidosComienzo = cfg->totalCasillas/6, maxPuntosxCasilla = cfg->cantidadPremios/4,
+        maxBandidosArea = cfg->cantidadBandidos/3, maxPuntosArea= cfg->cantidadPremios/2,
+        maxBandidosxCasilla = cfg->cantidadBandidos/4;
+
+    //Creo un minimo para los parametros
+    if(maxBandidosxCasilla<=0)
+        maxBandidosxCasilla=1;
+
+    if(maxBandidosArea<=0)
+        maxBandidosArea=1;
+
+    if(maxPuntosxCasilla<=0)
+        maxPuntosxCasilla=1;
+
+    if(maxPuntosArea<=0)
+        maxPuntosArea=1;
+
+    //Creo contadores
+    int contBandIni;
+    tConfiguracion contVariables={0,0,0,0,0,0,0};
+
+    int revisarArea=0;
+
+    //Recorro el tablero hasta que el nodoSiguiente llegue al principio del tablero,
+    while(nodoSiguiente!=*tablero)
+    {
+        //Creo punteros a las casillas
+        tCasilla *anterior=nodoAnterior->info, *actual=NodoAct->info, *siguiente=nodoSiguiente->info;
+
+        //Cantidad de bandidos en un area cercana al principio
+        if(bandidosComienzo==0)
+            contBandIni=contVariables.cantidadBandidos;
+        bandidosComienzo--;
+
+        //Compruebo que no existan oasis y tormentas en una misma casilla
+        if(actual->oasis == 1 && actual->tormenta == 1)
+            return invalido;
+
+        //Cada 2 casillas, reviso el area para evitar que los puntos y bandidos se generen todos juntos
+        if(revisarArea==1)
+        {
+            if(anterior->bandidos + actual ->bandidos + siguiente->bandidos > maxBandidosArea)
+                desbalanceado++;
+
+            if(anterior->premios + actual->premios + siguiente->premios > maxPuntosArea)
+                desbalanceado++;
+
+            revisarArea=0;
+        }
+        else
+            revisarArea=1;
+
+        //Reviso que no se generen demasiados premios o bandidos en una sola casilla.
+        if(actual->bandidos > maxBandidosArea)
+            desbalanceado++;
+
+        if(actual->premios > maxPuntosxCasilla)
+            desbalanceado++;
+
+        //Incremento contadores
+        incrementarCont(&contVariables, actual);
+
+        NodoAct=NodoAct->sig;
+        nodoAnterior= NodoAct->ant;
+        nodoSiguiente=NodoAct->sig;
+    }
+
+    //Compruebo que el area cerca del inicio no este demasiado llena con bandidos
+    if(contBandIni > maxBandidosArea)
+        desbalanceado++;
+
+    //Compruebo, por si es un mapa pregenerado, que corresponda con las configuracion.
+    if(cfg->cantidadBandidos != contVariables.cantidadBandidos || cfg->cantidadOasis != contVariables.cantidadOasis ||
+       cfg->cantidadPremios != contVariables.cantidadPremios || cfg->cantidadTormentas != contVariables.cantidadTormentas||
+       cfg->cantidadVidas != contVariables.cantidadVidas || cfg->totalCasillas != contVariables.totalCasillas + 2)
+        return invalido;
+
+    //Basandose en el tamaño del tablero, verifica para indicar si el tablero no esta desbalanceado
+    return (desbalanceado < cfg->totalCasillas/7)? 1 : 0;
+}
+
+void incrementarCont(tConfiguracion *contador, tCasilla *actual)
+{
+    contador->cantidadBandidos+=actual->bandidos;
+    contador->cantidadOasis+=actual->oasis;
+    contador->cantidadPremios+=actual->premios;
+    contador->cantidadTormentas+=actual->tormenta;
+    contador->cantidadVidas+=actual->vidas;
+    contador->totalCasillas++;
+
+}
+
+int verificarCasillaInicio (tCasilla *inicio)
+{
+    if(inicio->inicio==1 && inicio->jugador == 1 && !inicio->bandidos && !inicio->normal && !inicio->oasis &&
+       !inicio->premios && !inicio->refugio && !inicio->tormenta && !inicio->vidas)
+        return 1;
+    return 0;
+}
+
+int verificarCasillaFin (tCasilla *fin)
+{
+    if(fin->refugio==1 && !fin->inicio && !fin->jugador && !fin->bandidos && !fin->normal && !fin->oasis &&
+       !fin->premios && !fin->tormenta && !fin->vidas)
+        return 1;
+    return 0;
 }
