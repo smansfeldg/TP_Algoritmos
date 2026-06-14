@@ -55,6 +55,7 @@ void inicializarConfiguracion(tConfiguracion *cfg)
     cfg->cantidadVidas = 2;
     cfg->cantidadOasis = 2;
     cfg->cantidadTormentas = 3;
+    cfg->mapaPregenerado=0;
 }
 
 int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
@@ -97,6 +98,8 @@ void trozarConfig(void *config, const void *dato)
         c->cantidadOasis = valor;
     } else if (claveIgual(parametro, "CANTIDAD_TORMENTAS") || claveIgual(parametro, "maximo_tormentas")) {
         c->cantidadTormentas = valor;
+    } else if (claveIgual(parametro, "MAPA_PREGENERADO") || claveIgual(parametro, "mapa_pregenerado")){
+        c->mapaPregenerado = valor;
     }
 }
 
@@ -497,7 +500,7 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
 {
     FILE *arch;
 
-    if(abrirArchivo(&arch,nombreArchivo,"rt",0)==0)
+    if(abrirArchivo(&arch,nombreArchivo,"rt",0)==-1)
         return 0;
     int c, i=0;
     int nroBand=0;

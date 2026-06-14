@@ -77,6 +77,7 @@ typedef struct {
     int cantidadVidas;
     int cantidadOasis;
     int cantidadTormentas;
+    int mapaPregenerado;
 } tConfiguracion;
 
 typedef struct {

@@ -84,25 +84,78 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
     mostrarConfiguracion(&cfg);
     inicializarJuego(&juego, &cfg);
 
-    //Generar Tablero
-    do
-    {
-        generarTablero(&juego, &cfg);
-    }while(verificarTablero(&juego.tablero, &juego.config)!=1);
-    //Checkear si esta balanceado
+    int opcion_elegida = 0;
 
-    //Si es pregenerado, cargarlo y verificarlo
-    //Si es necesario mostrar menu;
+    //Si la configuracion indica que el mapa esta pregenerado, lo carga
+    if(cfg.mapaPregenerado == 1)
+    {
+        //Si no existe el mapa, pregunta si desea generar uno nuevo o volver
+        if(cargarCaravana("caravana.txt", &juego)==0)
+        {
+            limpiar_pantalla();
+            puts("No se pudo leer el tablero pregenerado.");
+            puts("Desea:\n");
+            puts("1: Generar un nuevo tablero.");
+            puts("2: Volver al menu.");
+            opcion_elegida = obtener_opcion(2);
+            opcion_elegida++;
+        }
+
+        if(opcion_elegida == 0)
+        {
+            opcion_elegida=0;
+
+            //Validar mapa pregenerado
+            int tableroPre = verificarTablero(&juego.tablero, &juego.config);
+
+            //Si el mapa no es complpetamente correcto, muestra este menu
+            if(tableroPre != 1)
+            {
+                limpiar_pantalla();
+                //Si el tablero es invalido:
+                if(tableroPre == -1)
+                {
+                    puts("\nEl tablero pregenerado es invalido. Puede:");
+                    puts("1: Generar un nuevo tablero.");
+                    puts("2: Volver al menu.");
+                    opcion_elegida = obtener_opcion(2);
+                    opcion_elegida++;
+                }
+
+                //Si el tablero no esta balanceado
+                if(tableroPre == 0)
+                {
+                    puts("\nEl tablero pregenerado no se encuentra balanceado, la experiencia puede que no sea lo mas satisfactoria.\nPuede\n");
+                    puts("1: Continuar de todas formas.");
+                    puts("2: Generar un nuevo tablero.");
+                    puts("3: Volver al menu.");
+                    opcion_elegida = obtener_opcion(3);
+                }
+
+            }
+        }
+    }
+
+    //Si se eligio voler al menu, muestra un mensaje por pantalla antes de volver
+    if(opcion_elegida == 3)
+    {
+        puts("\nPor Favor, revisar el esdato del mapa pregenerado, y asegurarse que la configuracion coincida con el!");
+        pausar_consola();
+        return;
+    }
+
+    //Generar Tablero si lo indica la configuracion o se eligio generar un nuevo mapa
+    if(cfg.mapaPregenerado == 0 || opcion_elegida == 2)
+    {
+        do
+        {
+            generarTablero(&juego, &cfg);
+        }while(verificarTablero(&juego.tablero, &juego.config)!=1);
+        guardarCaravana("caravana.txt", &juego);
+    }
 
     iniciarPartida(&juego, archivosDelJuego->archJug, indice);
     limpiar_pantalla();
-
-    guardarCaravana("caravana.txt", &juego);
-
-    ///Para probar si carga bien caravana.
-    //vaciarLista(&juego.tablero);
-    //vaciarLista(&juego.bandidos);
-    //cargarCaravana("caravana.txt", &juego);
 
     mostrarReglas();
     printf("!Tablero listo!\nPosicion inicial: 1 (Inicio)\n");
