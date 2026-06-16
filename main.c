@@ -62,7 +62,7 @@ int main()
     } while(opcion_elegida != 3);
 
     vaciarLista(&ranking);
-    archivarIndice(archivosDelJuego.archIndice, ARCH_INDICE, &indice);
+    liberarArbolBin(&indice);
     finCerrarArchivos(&archivosDelJuego);
 
     return 0;
@@ -81,7 +81,10 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
         return;
     }
 
-    mostrarConfiguracion(&cfg);
+    if(cfg.mapaPregenerado!=1)
+        mostrarConfiguracion(&cfg);
+    else
+        puts(">>Cargando Mapa Pregenerado...");
     inicializarJuego(&juego, &cfg);
 
     int opcion_elegida = 0;
@@ -136,10 +139,9 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
         }
     }
 
-    //Si se eligio voler al menu, muestra un mensaje por pantalla antes de volver
     if(opcion_elegida == 3)
     {
-        puts("\nPor Favor, revisar el esdato del mapa pregenerado, y asegurarse que la configuracion coincida con el!");
+        puts("\nPor Favor, revisar el esdato del mapa pregenerado, y asegurarse que respete el formato!");
         pausar_consola();
         return;
     }
@@ -152,6 +154,7 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
             generarTablero(&juego, &cfg);
         }while(verificarTablero(&juego.tablero, &juego.config)!=1);
         guardarCaravana("caravana.txt", &juego);
+
     }
 
     iniciarPartida(&juego, archivosDelJuego->archJug, indice);
@@ -190,6 +193,8 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
     fseek(archivosDelJuego->archPart, 0, SEEK_END);
     reg.idPartida = (int)(ftell(archivosDelJuego->archPart) / sizeof(tRegistroPartida)) + 1;
     actualizarRegistroPartidas(*archivosDelJuego, indice, ranking, &reg);
+
+    archivarIndice(archivosDelJuego->archIndice, ARCH_INDICE, indice);
 
     liberarJuego(&juego);
 

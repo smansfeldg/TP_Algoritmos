@@ -682,7 +682,6 @@ int archivarIndice(FILE *archIndx, char *nombreArch, ArbolBin *arbolIndx)
     }
 
     recorrerEnOrdenArbolBin(arbolIndx, 0, archIndx, guardNodoIndxEnArchivo);
-    liberarArbolBin(arbolIndx);
 
     return cerrarArchivo(&archIndx, nombreArch, 0);
 }
@@ -966,66 +965,64 @@ void mostrarIndxArch (void *a, const void *b)
 int verificarTablero(tLista *tablero, tConfiguracion *cfg)
 {
     int desbalanceado=0;
-    const int invalido =-1;
-    tNodoListaC *NodoAct=*tablero;
+    int invalido=-1;
+    tNodoListaC *nodoAct=*tablero;
 
-    //Verifico que inicio y fin existan y tengan el formato correcto
-    if(verificarCasillaInicio((tCasilla*)NodoAct->info)==0)
-        return invalido;
-
-    //Creo punteros al anterior y siguiente del nodo para revisar un area
-    tNodoListaC *nodoAnterior= NodoAct->ant, *nodoSiguiente=NodoAct->sig;
-
-    if(verificarCasillaFin((tCasilla*)nodoAnterior->info)==0)
-        return invalido;
-
-    NodoAct=NodoAct->sig;
-    nodoAnterior= nodoAnterior->sig;
-    nodoSiguiente=nodoSiguiente->sig;
-
-    //Parametros a medir
-    int bandidosComienzo = cfg->totalCasillas/6, maxPuntosxCasilla = cfg->cantidadPremios/4,
-        maxBandidosArea = cfg->cantidadBandidos/3, maxPuntosArea= cfg->cantidadPremios/2,
-        maxBandidosxCasilla = cfg->cantidadBandidos/4;
-
-    //Creo un minimo para los parametros
-    if(maxBandidosxCasilla<=0)
-        maxBandidosxCasilla=1;
-
-    if(maxBandidosArea<=0)
-        maxBandidosArea=1;
-
-    if(maxPuntosxCasilla<=0)
-        maxPuntosxCasilla=1;
-
-    if(maxPuntosArea<=0)
-        maxPuntosArea=1;
-
-    //Creo contadores
-    int contBandIni;
-    tConfiguracion contVariables={0,0,0,0,0,0,0};
-
-    int revisarArea=0;
-
-    //Recorro el tablero hasta que el nodoSiguiente llegue al principio del tablero,
-    while(nodoSiguiente!=*tablero)
+    if(cfg->mapaPregenerado==1)
     {
-        //Creo punteros a las casillas
-        tCasilla *anterior=nodoAnterior->info, *actual=NodoAct->info, *siguiente=nodoSiguiente->info;
+        //Verifico que inicio y fin existan y tengan el formato correcto
+        if(verificarCasillaInicio((tCasilla*)nodoAct->info)==0)
+            return invalido;
 
-        //Cantidad de bandidos en un area cercana al principio
-        if(bandidosComienzo==0)
-            contBandIni=contVariables.cantidadBandidos;
-        bandidosComienzo--;
+        if(verificarCasillaFin((tCasilla*)nodoAct->ant->info)==0)
+            return invalido;
 
-        //Compruebo que no existan oasis y tormentas en una misma casilla
+        tConfiguracion auxCfg={0,0,0,0,0,0,0,1};
+
+        //Obtiene los datos del mapa
+        do
+        {
+            incrementarCont(&auxCfg, (tCasilla*)nodoAct->info);
+            nodoAct=nodoAct->sig;
+        }
+        while(nodoAct!=*tablero);
+
+        *cfg=auxCfg;
+    }
+
+    //Si hay muy pocas casillas, todo va a estar muy junto.
+    if(cfg->totalCasillas<=15)
+        return 1;
+
+    nodoAct=(*tablero)->sig;
+
+    int maxBandidosArea= (cfg->totalCasillas/6 <= 0)? 1 : cfg->totalCasillas/6;
+    int maxPuntosArea= (cfg->cantidadPremios/2 <= 0)? 1 : cfg->cantidadPremios/2;
+
+    int maxPuntosCasilla= (cfg->cantidadPremios/4 <= 0)? 1 : cfg->cantidadPremios/4;
+    int maxBandidosCasilla= (cfg->cantidadBandidos/4 <= 0)? 1 : cfg->cantidadBandidos/4;
+
+    int areaInicial = maxBandidosArea;
+    int bandInicio = 0;
+
+    int revisarArea= (cfg->totalCasillas <= 15)? 2 : 0;
+
+    while(nodoAct!= (*tablero)->ant)
+    {
+        tCasilla *actual =(tCasilla*) nodoAct->info;
+
         if(actual->oasis == 1 && actual->tormenta == 1)
             return invalido;
 
-        //Cada 2 casillas, reviso el area para evitar que los puntos y bandidos se generen todos juntos
+
+        if(areaInicial==0 && areaInicial > maxBandidosArea)
+            desbalanceado++;
+
         if(revisarArea==1)
         {
-            if(anterior->bandidos + actual ->bandidos + siguiente->bandidos > maxBandidosArea)
+            tCasilla *anterior =(tCasilla*) nodoAct->ant->info;
+            tCasilla *siguiente =(tCasilla*) nodoAct->sig->info;
+            if(anterior->bandidos + actual->bandidos + siguiente->bandidos > maxBandidosArea)
                 desbalanceado++;
 
             if(anterior->premios + actual->premios + siguiente->premios > maxPuntosArea)
@@ -1033,37 +1030,95 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
 
             revisarArea=0;
         }
-        else
+        else if (revisarArea==0)
             revisarArea=1;
 
-        //Reviso que no se generen demasiados premios o bandidos en una sola casilla.
-        if(actual->bandidos > maxBandidosArea)
+        if(actual->premios > maxPuntosCasilla)
+            desbalanceado+=2;
+        if(actual->bandidos > maxBandidosCasilla)
             desbalanceado++;
 
-        if(actual->premios > maxPuntosxCasilla)
-            desbalanceado++;
+        areaInicial--;
 
-        //Incremento contadores
-        incrementarCont(&contVariables, actual);
+        if(actual->bandidos>=1)
+            bandInicio+=actual->bandidos;
 
-        NodoAct=NodoAct->sig;
-        nodoAnterior= NodoAct->ant;
-        nodoSiguiente=NodoAct->sig;
+        nodoAct=nodoAct->sig;
     }
 
-    //Compruebo que el area cerca del inicio no este demasiado llena con bandidos
-    if(contBandIni > maxBandidosArea)
-        desbalanceado++;
-
-    //Compruebo, por si es un mapa pregenerado, que corresponda con las configuracion.
-    if(cfg->cantidadBandidos != contVariables.cantidadBandidos || cfg->cantidadOasis != contVariables.cantidadOasis ||
-       cfg->cantidadPremios != contVariables.cantidadPremios || cfg->cantidadTormentas != contVariables.cantidadTormentas||
-       cfg->cantidadVidas != contVariables.cantidadVidas || cfg->totalCasillas != contVariables.totalCasillas + 2)
-        return invalido;
-
-    //Basandose en el tamaño del tablero, verifica para indicar si el tablero no esta desbalanceado
-    return (desbalanceado < cfg->totalCasillas/7)? 1 : 0;
+    return desbalanceado < cfg->totalCasillas/7;
 }
+/*
+int verificarTableroPreGenerado(tLista *tablero, tConfiguracion *cfg)
+{
+    int desbalanceado=0;
+    const int invalido=-1;
+    tNodoListaC *nodoAct=*tablero;
+
+
+
+
+    //Si hay muy pocas casillas, todo va a estar muy junto.
+    if(auxCfg.totalCasillas<=15)
+        return 0;
+
+
+    nodoAct=(*tablero)->sig;
+
+    int maxBandidosArea= (cfg->totalCasillas/6 <= 0)? 1 : cfg->totalCasillas/6;
+    int maxPuntosArea= (cfg->cantidadPremios/2 <= 0)? 1 : cfg->cantidadPremios/2;
+
+    int maxPuntosCasilla= (cfg->cantidadPremios/4 <= 0)? 1 : cfg->cantidadPremios/4;
+    int maxBandidosCasilla= (cfg->cantidadBandidos/4 <= 0)? 1 : cfg->cantidadBandidos/4;
+
+    int areaInicial = maxBandidosArea;
+    int bandInicio = 0;
+
+    int revisarArea= (cfg->totalCasillas <= 15)? 2 : 0;
+
+
+    while(nodoAct!= (*tablero)->ant)
+    {
+        tCasilla *actual =(tCasilla*) nodoAct->info;
+
+        if(actual->oasis == 1 && actual->tormenta == 1)
+            return invalido;
+
+
+        if(areaInicial==0 && areaInicial > maxBandidosArea)
+            desbalanceado++;
+
+        if(revisarArea==1)
+        {
+            tCasilla *anterior =(tCasilla*) nodoAct->ant->info;
+            tCasilla *siguiente =(tCasilla*) nodoAct->sig->info;
+            if(anterior->bandidos + actual->bandidos + siguiente->bandidos > maxBandidosArea)
+                desbalanceado++;
+
+            if(anterior->premios + actual->premios + siguiente->premios > maxPuntosArea)
+                desbalanceado++;
+
+            revisarArea=0;
+        }
+        else if (revisarArea==0)
+            revisarArea=1;
+
+        if(actual->premios > maxPuntosCasilla)
+            desbalanceado+=2;
+        if(actual->bandidos > maxBandidosCasilla)
+            desbalanceado++;
+
+        areaInicial--;
+
+        if(actual->bandidos>=1)
+            bandInicio+=actual->bandidos;
+
+        nodoAct=nodoAct->sig;
+    }
+
+    return desbalanceado < auxCfg.totalCasillas/7;
+}
+*/
 
 void incrementarCont(tConfiguracion *contador, tCasilla *actual)
 {
