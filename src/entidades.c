@@ -522,7 +522,7 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
         return 0;
 
     //Lee la casilla hasta cargar la cantidad de casillas indicadas por configuracion o hasta el fin del archivo
-    while(fgets(buffer,100,arch)!=NULL && i<juego->config.totalCasillas)
+    while(fgets(buffer,100,arch)!=NULL && i<auxCfg.totalCasillas)
     {
         tBandido bandidoAux;
         tCasilla auxCas={0,0,0,0,0,0,0,0,0,0};
@@ -1010,6 +1010,8 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
     {
         tCasilla *actual =(tCasilla*) nodoAct->info;
 
+        if(verificarCasillaVacia(actual)==0)
+            return invalido;
         if(actual->oasis == 1 && actual->tormenta == 1)
             return invalido;
 
@@ -1070,4 +1072,17 @@ int verificarCasillaFin (tCasilla *fin)
        !fin->premios && !fin->tormenta && !fin->vidas)
         return 1;
     return 0;
+}
+
+
+int verificarCasillaVacia(tCasilla *casilla)
+{
+    if(casilla->normal==0)
+    {
+        if((casilla->bandidos==0 && casilla->jugador== 0 && casilla->oasis==0 && casilla->premios==0
+            && casilla->tormenta==0 && casilla->vidas==0))
+            return 0;
+    }
+
+    return 1;
 }
