@@ -70,7 +70,8 @@ int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
     leerArchivoTxt(arch, cfg, sizeof(tConfiguracion), sizeof(char) * 100, trozarConfig);
     fclose(arch);
 
-    return cfg->totalCasillas >= 3 && cfg->vidasIniciales > 0 && cfg->cantidadBandidos >0;
+    return cfg->totalCasillas >= 3 && cfg->vidasIniciales > 0 && cfg->cantidadBandidos >0
+    && cfg->totalCasillas >= cfg->cantidadOasis+cfg->cantidadTormentas+2;
 }
 
 void trozarConfig(void *config, const void *dato)
@@ -553,12 +554,6 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
         char *elemento = strchr(buffer,'[')+1;
         while(*elemento!=']' && *elemento!='\0')
         {
-            cant=1;
-            if(*elemento>='1' && *elemento<='9')
-            {
-                cant= (*elemento) - '0';
-                elemento++;
-            }
             if(*elemento=='I')
                 auxCas.inicio=1;
             if(*elemento=='J')
@@ -586,6 +581,9 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
             if(*elemento=='.')
                 auxCas.normal=1;
 
+            cant=1;
+            if(*elemento>='1' && *elemento<='9')
+                cant= (*elemento) - '0';
             elemento++;
         }
         insertarAlFinal(&juego->tablero,&auxCas, sizeof(tCasilla));
@@ -1061,7 +1059,7 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
         if(actual->premios > maxPuntosCasilla)
             desbalanceado+=2;
         if(actual->bandidos > maxBandidosCasilla)
-            desbalanceado++;
+            desbalanceado+=2;
 
         areaInicial--;
 
@@ -1070,6 +1068,12 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
 
         nodoAct=nodoAct->sig;
     }
+    if(cfg->cantidadBandidos<cfg->cantidadPremios)
+        desbalanceado+=2;
+    if(cfg->cantidadBandidos>cfg->totalCasillas)
+        desbalanceado+=2;
+    if(cfg->vidasIniciales+cfg->cantidadVidas > cfg->cantidadBandidos)
+        desbalanceado++;
 
     return desbalanceado < cfg->totalCasillas/7;
 }
