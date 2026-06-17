@@ -510,16 +510,28 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
     tConfiguracion auxCfg={0,0,0,0,0,0,0,1};
 
     if(fgets(buffer,100,arch)==NULL)
+    {
+        cerrarArchivo(&arch,nombreArchivo,0);
         return 0;
+    }
     if(fgets(buffer,100,arch)==NULL)
+    {
+        cerrarArchivo(&arch,nombreArchivo,0);
         return 0;
+    }
 
     if(sscanf(buffer,"Posiciones: %d | Vidas: %d | Bandidos: %d\n",
                &auxCfg.totalCasillas, &auxCfg.vidasIniciales, &auxCfg.cantidadBandidos)!=3)
+    {
+        cerrarArchivo(&arch,nombreArchivo,0);
         return 0;
+    }
 
     if(fgets(buffer,100,arch)==NULL || buffer[0]!='\n')
+    {
+        cerrarArchivo(&arch,nombreArchivo,0);
         return 0;
+    }
 
     //Lee la casilla hasta cargar la cantidad de casillas indicadas por configuracion o hasta el fin del archivo
     while(fgets(buffer,100,arch)!=NULL && i<auxCfg.totalCasillas)
@@ -527,7 +539,17 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
         tBandido bandidoAux;
         tCasilla auxCas={0,0,0,0,0,0,0,0,0,0};
         if (sscanf(buffer, " %d:", &auxCas.posicion) != 1)
-            return 0;
+        {
+        cerrarArchivo(&arch,nombreArchivo,0);
+        return 0;
+        }
+
+        if(auxCas.posicion!= i+1)
+        {
+        cerrarArchivo(&arch,nombreArchivo,0);
+        return 0;
+        }
+
         char *elemento = strchr(buffer,'[')+1;
         while(*elemento!=']' && *elemento!='\0')
         {
