@@ -540,14 +540,14 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
         tCasilla auxCas={0,0,0,0,0,0,0,0,0,0};
         if (sscanf(buffer, " %d:", &auxCas.posicion) != 1)
         {
-        cerrarArchivo(&arch,nombreArchivo,0);
-        return 0;
+            cerrarArchivo(&arch,nombreArchivo,0);
+            return 0;
         }
 
         if(auxCas.posicion!= i+1)
         {
-        cerrarArchivo(&arch,nombreArchivo,0);
-        return 0;
+            cerrarArchivo(&arch,nombreArchivo,0);
+            return 0;
         }
 
         char *elemento = strchr(buffer,'[')+1;
