@@ -987,6 +987,8 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
         }
         while(nodoAct!=*tablero);
 
+        auxCfg.vidasIniciales=cfg->vidasIniciales;
+        auxCfg.mapaPregenerado=cfg->mapaPregenerado;
         *cfg=auxCfg;
     }
 
