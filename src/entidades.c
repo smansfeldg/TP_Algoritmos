@@ -70,7 +70,7 @@ int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
     leerArchivoTxt(arch, cfg, sizeof(tConfiguracion), sizeof(char) * 100, trozarConfig);
     fclose(arch);
 
-    return cfg->totalCasillas >= 3 && cfg->vidasIniciales > 0;
+    return cfg->totalCasillas >= 3 && cfg->vidasIniciales > 0 && cfg->cantidadBandidos >0;
 }
 
 void trozarConfig(void *config, const void *dato)
@@ -976,17 +976,19 @@ void mostrarIndxArch (void *a, const void *b)
 int verificarTablero(tLista *tablero, tConfiguracion *cfg)
 {
     int desbalanceado=0;
-    int invalido=-1;
     tNodoListaC *nodoAct=*tablero;
 
     if(cfg->mapaPregenerado==1)
     {
         //Verifico que inicio y fin existan y tengan el formato correcto
         if(verificarCasillaInicio((tCasilla*)nodoAct->info)==0)
-            return invalido;
+            return -1;
 
         if(verificarCasillaFin((tCasilla*)nodoAct->ant->info)==0)
-            return invalido;
+            return -1;
+
+        if(cfg->cantidadBandidos<=0)
+            return -1;
     }
 
     //Si hay muy pocas casillas, todo va a estar muy junto.
@@ -1011,9 +1013,9 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
         tCasilla *actual =(tCasilla*) nodoAct->info;
 
         if(verificarCasillaVacia(actual)==0)
-            return invalido;
+            return -1;
         if(actual->oasis == 1 && actual->tormenta == 1)
-            return invalido;
+            return -1;
 
 
         if(areaInicial==0 && areaInicial > maxBandidosArea)
