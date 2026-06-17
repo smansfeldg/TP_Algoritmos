@@ -189,5 +189,6 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg);
 void incrementarCont(tConfiguracion *contador, tCasilla *actual);
 int verificarCasillaInicio (tCasilla *inicio);
 int verificarCasillaFin (tCasilla *fin);
+int verificarCasillaVacia(tCasilla *casilla);
 
 #endif

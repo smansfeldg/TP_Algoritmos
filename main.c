@@ -141,7 +141,7 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
 
     if(opcion_elegida == 3)
     {
-        puts("\nPor Favor, revisar el esdato del mapa pregenerado, y asegurarse que respete el formato!");
+        puts("\nPor Favor, revisar el estado del mapa pregenerado, y asegurarse que respete el formato!");
         pausar_consola();
         return;
     }
@@ -149,9 +149,10 @@ void jugar(tArchivos *archivosDelJuego, ArbolBin *indice, tLista *ranking)
     //Generar Tablero si lo indica la configuracion o se eligio generar un nuevo mapa
     if(cfg.mapaPregenerado == 0 || opcion_elegida == 2)
     {
+        juego.config=cfg;
         do
         {
-            generarTablero(&juego, &cfg);
+            generarTablero(&juego, &juego.config);
         }while(verificarTablero(&juego.tablero, &juego.config)!=1);
         guardarCaravana("caravana.txt", &juego);
 

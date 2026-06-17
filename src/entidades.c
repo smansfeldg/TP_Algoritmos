@@ -67,7 +67,7 @@ int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
         return 0;
     }
 
-    leerArchivoTxt(arch, cfg, sizeof(tConfiguracion), sizeof(char) * 80, trozarConfig);
+    leerArchivoTxt(arch, cfg, sizeof(tConfiguracion), sizeof(char) * 100, trozarConfig);
     fclose(arch);
 
     return cfg->totalCasillas >= 3 && cfg->vidasIniciales > 0;
@@ -507,13 +507,22 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
     char buffer[100];
     int cant;
 
-    while(fgets(buffer,100,arch)!=NULL && buffer[0]!='\n')
-    {
-        //Lee lineas hasta que encuentre el espacio entre el texto y el tablero.
-    }
+    tConfiguracion auxCfg={0,0,0,0,0,0,0,1};
+
+    if(fgets(buffer,100,arch)==NULL)
+        return 0;
+    if(fgets(buffer,100,arch)==NULL)
+        return 0;
+
+    if(sscanf(buffer,"Posiciones: %d | Vidas: %d | Bandidos: %d\n",
+               &auxCfg.totalCasillas, &auxCfg.vidasIniciales, &auxCfg.cantidadBandidos)!=3)
+        return 0;
+
+    if(fgets(buffer,100,arch)==NULL || buffer[0]!='\n')
+        return 0;
 
     //Lee la casilla hasta cargar la cantidad de casillas indicadas por configuracion o hasta el fin del archivo
-    while(fgets(buffer,100,arch)!=NULL && i<juego->config.totalCasillas)
+    while(fgets(buffer,100,arch)!=NULL && i<auxCfg.totalCasillas)
     {
         tBandido bandidoAux;
         tCasilla auxCas={0,0,0,0,0,0,0,0,0,0};
@@ -558,9 +567,11 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
             elemento++;
         }
         insertarAlFinal(&juego->tablero,&auxCas, sizeof(tCasilla));
+        incrementarCont(&auxCfg, &auxCas);
         i++;
     }
 
+    juego->config=auxCfg;
     return cerrarArchivo(&arch,nombreArchivo,0);
 }
 
@@ -976,20 +987,6 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
 
         if(verificarCasillaFin((tCasilla*)nodoAct->ant->info)==0)
             return invalido;
-
-        tConfiguracion auxCfg={0,0,0,0,0,0,0,1};
-
-        //Obtiene los datos del mapa
-        do
-        {
-            incrementarCont(&auxCfg, (tCasilla*)nodoAct->info);
-            nodoAct=nodoAct->sig;
-        }
-        while(nodoAct!=*tablero);
-
-        auxCfg.vidasIniciales=cfg->vidasIniciales;
-        auxCfg.mapaPregenerado=cfg->mapaPregenerado;
-        *cfg=auxCfg;
     }
 
     //Si hay muy pocas casillas, todo va a estar muy junto.
@@ -1013,6 +1010,8 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
     {
         tCasilla *actual =(tCasilla*) nodoAct->info;
 
+        if(verificarCasillaVacia(actual)==0)
+            return invalido;
         if(actual->oasis == 1 && actual->tormenta == 1)
             return invalido;
 
@@ -1053,13 +1052,10 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
 
 void incrementarCont(tConfiguracion *contador, tCasilla *actual)
 {
-    contador->cantidadBandidos+=actual->bandidos;
     contador->cantidadOasis+=actual->oasis;
     contador->cantidadPremios+=actual->premios;
     contador->cantidadTormentas+=actual->tormenta;
     contador->cantidadVidas+=actual->vidas;
-    contador->totalCasillas++;
-
 }
 
 int verificarCasillaInicio (tCasilla *inicio)
@@ -1076,4 +1072,17 @@ int verificarCasillaFin (tCasilla *fin)
        !fin->premios && !fin->tormenta && !fin->vidas)
         return 1;
     return 0;
+}
+
+
+int verificarCasillaVacia(tCasilla *casilla)
+{
+    if(casilla->normal==0)
+    {
+        if((casilla->bandidos==0 && casilla->jugador== 0 && casilla->oasis==0 && casilla->premios==0
+            && casilla->tormenta==0 && casilla->vidas==0))
+            return 0;
+    }
+
+    return 1;
 }
