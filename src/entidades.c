@@ -67,7 +67,7 @@ int cargarConfiguracion(const char *archivo, tConfiguracion *cfg)
         return 0;
     }
 
-    leerArchivoTxt(arch, cfg, sizeof(tConfiguracion), sizeof(char) * 80, trozarConfig);
+    leerArchivoTxt(arch, cfg, sizeof(tConfiguracion), sizeof(char) * 100, trozarConfig);
     fclose(arch);
 
     return cfg->totalCasillas >= 3 && cfg->vidasIniciales > 0;
@@ -507,10 +507,19 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
     char buffer[100];
     int cant;
 
-    while(fgets(buffer,100,arch)!=NULL && buffer[0]!='\n')
-    {
-        //Lee lineas hasta que encuentre el espacio entre el texto y el tablero.
-    }
+    tConfiguracion auxCfg={0,0,0,0,0,0,0,1};
+
+    if(fgets(buffer,100,arch)==NULL)
+        return 0;
+    if(fgets(buffer,100,arch)==NULL)
+        return 0;
+
+    if(sscanf(buffer,"Posiciones: %d | Vidas: %d | Bandidos: %d\n",
+               &auxCfg.totalCasillas, &auxCfg.vidasIniciales, &auxCfg.cantidadBandidos)!=3)
+        return 0;
+
+    if(fgets(buffer,100,arch)==NULL || buffer[0]!='\n')
+        return 0;
 
     //Lee la casilla hasta cargar la cantidad de casillas indicadas por configuracion o hasta el fin del archivo
     while(fgets(buffer,100,arch)!=NULL && i<juego->config.totalCasillas)
@@ -558,9 +567,11 @@ int cargarCaravana(const char *nombreArchivo, tJuego *juego)
             elemento++;
         }
         insertarAlFinal(&juego->tablero,&auxCas, sizeof(tCasilla));
+        incrementarCont(&auxCfg, &auxCas);
         i++;
     }
 
+    juego->config=auxCfg;
     return cerrarArchivo(&arch,nombreArchivo,0);
 }
 
@@ -976,18 +987,6 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
 
         if(verificarCasillaFin((tCasilla*)nodoAct->ant->info)==0)
             return invalido;
-
-        tConfiguracion auxCfg={0,0,0,0,0,0,0,1};
-
-        //Obtiene los datos del mapa
-        do
-        {
-            incrementarCont(&auxCfg, (tCasilla*)nodoAct->info);
-            nodoAct=nodoAct->sig;
-        }
-        while(nodoAct!=*tablero);
-
-        *cfg=auxCfg;
     }
 
     //Si hay muy pocas casillas, todo va a estar muy junto.
@@ -1051,13 +1050,10 @@ int verificarTablero(tLista *tablero, tConfiguracion *cfg)
 
 void incrementarCont(tConfiguracion *contador, tCasilla *actual)
 {
-    contador->cantidadBandidos+=actual->bandidos;
     contador->cantidadOasis+=actual->oasis;
     contador->cantidadPremios+=actual->premios;
     contador->cantidadTormentas+=actual->tormenta;
     contador->cantidadVidas+=actual->vidas;
-    contador->totalCasillas++;
-
 }
 
 int verificarCasillaInicio (tCasilla *inicio)
